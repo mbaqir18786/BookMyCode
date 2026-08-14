@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-paper: #FAF9F5;
+    --border-dark: #0F172A;
+    --color-paddy: #15803D;
+    --color-harvest: #EAB308;
+    --color-rust: #C2410C;
+    --color-onyx: #0F172A;
+    --color-sky: #0284C7;
+  }
+
+  body {
+    background-color: var(--bg-paper);
+    color: var(--color-onyx);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+}
+
+/* Neo-Brutalist Design Tokens */
+.neo-box {
+  background-color: #FFFFFF;
+  border: 3px solid var(--border-dark);
+  box-shadow: 4px 4px 0px var(--border-dark);
+  border-radius: 0px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.neo-box:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--border-dark);
+}
+
+.neo-box-static {
+  background-color: #FFFFFF;
+  border: 3px solid var(--border-dark);
+  box-shadow: 4px 4px 0px var(--border-dark);
+  border-radius: 0px;
+}
+
+.neo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.6rem 1.2rem;
+  border: 3px solid var(--border-dark);
+  box-shadow: 4px 4px 0px var(--border-dark);
+  border-radius: 0px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.1s ease;
+}
+
+.neo-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--border-dark);
+}
+
+.neo-btn-primary {
+  background-color: var(--color-paddy);
+  color: #FFFFFF;
+}
+
+.neo-btn-primary:hover {
+  background-color: #166534;
+}
+
+.neo-btn-accent {
+  background-color: var(--color-harvest);
+  color: #0F172A;
+}
+
+.neo-btn-accent:hover {
+  background-color: #CA8A04;
+}
+
+.neo-btn-danger {
+  background-color: var(--color-rust);
+  color: #FFFFFF;
+}
+
+.neo-btn-danger:hover {
+  background-color: #9A3412;
+}
+
+.neo-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  border: 2px solid var(--border-dark);
+  border-radius: 0px;
+  box-shadow: 2px 2px 0px var(--border-dark);
+}
+
+.neo-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 3px solid var(--border-dark);
+  border-radius: 0px;
+  background-color: #FFFFFF;
+  font-weight: 600;
+  color: var(--color-onyx);
+  outline: none;
+}
+
+.neo-input:focus {
+  box-shadow: 4px 4px 0px var(--color-paddy);
+}
+
+/* Empty state styling */
+.neo-empty-state {
+  border: 3px dashed var(--border-dark);
+  background-color: #FEFCE8;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
