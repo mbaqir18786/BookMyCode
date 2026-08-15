@@ -17,6 +17,7 @@ async function seed() {
     DELETE FROM sellers;
     DELETE FROM farms;
     DELETE FROM users;
+    DELETE FROM call_logs;
   `);
 
   // Seed Users

@@ -151,6 +151,19 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   details TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- CALL LOGS TABLE (IVR / Telephony)
+CREATE TABLE IF NOT EXISTS call_logs (
+  id TEXT PRIMARY KEY,
+  call_sid TEXT,
+  from_number TEXT,
+  to_number TEXT,
+  current_step TEXT,
+  last_digits TEXT,
+  metadata TEXT, -- JSON blob stored as TEXT
+  action_taken TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 `;
 
 module.exports = schemaSQL;
