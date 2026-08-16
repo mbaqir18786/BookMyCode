@@ -41,7 +41,7 @@ export default function FarmerDashboard() {
       <div className="neo-box p-6 bg-[#DCFCE7] flex flex-wrap items-center justify-between gap-4">
         <div>
           <span className="neo-badge bg-[#15803D] text-white">FARMER DASHBOARD</span>
-          <h1 className="text-3xl font-black uppercase text-[#0F172A] mt-1">Welcome, {currentUser.name}</h1>
+          <h1 className="text-3xl font-black uppercase text-[#0F172A] mt-1">Sat Sri Akal, {currentUser.name}!</h1>
           <p className="font-semibold text-sm text-gray-700">
             District: <span className="font-bold underline">{currentUser.district}</span> | Phone: {currentUser.phone}
           </p>

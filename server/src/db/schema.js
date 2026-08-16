@@ -141,14 +141,27 @@ CREATE TABLE IF NOT EXISTS notifications (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- AUDIT LOGS TABLE
-CREATE TABLE IF NOT EXISTS audit_logs (
+-- CALL LOGS TABLE (Conversational Voice AI Call Records)
+CREATE TABLE IF NOT EXISTS call_logs (
   id TEXT PRIMARY KEY,
-  admin_id TEXT NOT NULL,
-  action TEXT NOT NULL,
-  target_type TEXT NOT NULL,
-  target_id TEXT NOT NULL,
-  details TEXT,
+  caller_phone TEXT NOT NULL,
+  farmer_id TEXT,
+  duration_seconds INTEGER DEFAULT 0,
+  summary TEXT,
+  outcome TEXT,
+  recording_url TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CALLBACK REQUESTS TABLE (Admin/Support Callback Queue)
+CREATE TABLE IF NOT EXISTS callback_requests (
+  id TEXT PRIMARY KEY,
+  caller_phone TEXT NOT NULL,
+  farmer_id TEXT,
+  reason TEXT NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'in_progress', 'resolved')),
+  assigned_officer TEXT,
+  notes TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 `;

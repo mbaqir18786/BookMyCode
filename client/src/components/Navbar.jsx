@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useCurrentUser } from '../context/CurrentUserContext';
-import { Bell, Menu, X, ShieldCheck, Tractor, ShoppingBag, Landmark, Zap, MapPin } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { Bell, Menu, X, Globe } from 'lucide-react';
 
 export default function Navbar() {
   const { currentUser, role, switchRole, notifications, fetchNotifications } = useCurrentUser();
+  const { lang, changeLanguage, farmerLanguages, resetToEnglishForNonFarmers } = useLanguage();
   const location = useLocation();
+
+  const handleRoleChange = (newRole) => {
+    switchRole(newRole);
+    setMobileMenuOpen(false);
+    if (newRole !== 'farmer') {
+      resetToEnglishForNonFarmers();
+    }
+  };
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -21,7 +31,7 @@ export default function Navbar() {
     }
   };
 
-  // Clean, intuitive role-specific navigation menu items
+  // Role-specific navigation menu items
   const roleNavLinks = {
     farmer: [
       { path: '/farmer', label: '🌾 Farmer Dashboard' },
@@ -44,7 +54,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 bg-[#FAF9F5] border-b-4 border-[#0F172A]">
-      {/* Dev-Only Role Switcher Banner */}
+      {/* Dev-Only Role Switcher & Language Switcher Banner */}
       <div className="bg-[#0F172A] text-white px-4 py-2 flex flex-wrap items-center justify-between text-xs font-mono border-b-2 border-yellow-400">
         <div className="flex items-center space-x-2">
           <span className="bg-yellow-400 text-black px-2 py-0.5 font-bold uppercase tracking-wider">DEV ROLE SWITCHER</span>
@@ -52,21 +62,39 @@ export default function Navbar() {
           <span className="font-bold text-yellow-300 uppercase underline">{currentUser.name} ({role})</span>
         </div>
 
-        <div className="flex items-center space-x-2 mt-1 sm:mt-0">
-          <label className="text-gray-300 font-semibold">Switch Active Role:</label>
-          <select
-            value={role}
-            onChange={(e) => {
-              switchRole(e.target.value);
-              setMobileMenuOpen(false);
-            }}
-            className="bg-white text-black font-bold px-2 py-1 border-2 border-yellow-400 rounded-none cursor-pointer outline-none text-xs"
-          >
-            <option value="farmer">🌾 Farmer (Gurpreet Singh)</option>
-            <option value="seller">🚜 Seller (Kahlon Agri & Biofuel)</option>
-            <option value="government">🏛️ Government (DAO Ludhiana)</option>
-            <option value="super_admin">⚡ Super Admin (KYC Validator)</option>
-          </select>
+        <div className="flex items-center space-x-3 mt-1 sm:mt-0">
+          {/* Farmer-Only Language Selector */}
+          {role === 'farmer' && (
+            <div className="flex items-center space-x-1.5 bg-[#15803D] px-2.5 py-1 border-2 border-yellow-400">
+              <Globe className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
+              <span className="text-yellow-300 font-bold hidden sm:inline text-xs uppercase tracking-wider">Farmer Language:</span>
+              <select
+                value={lang}
+                onChange={(e) => changeLanguage(e.target.value)}
+                className="bg-yellow-400 text-black font-black px-2 py-0.5 rounded-none cursor-pointer outline-none text-xs border border-black"
+              >
+                {farmerLanguages.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.flag} {l.native} ({l.name})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="flex items-center space-x-1">
+            <label className="text-gray-300 font-semibold hidden md:inline">Role:</label>
+            <select
+              value={role}
+              onChange={(e) => handleRoleChange(e.target.value)}
+              className="bg-white text-black font-bold px-2 py-1 border-2 border-yellow-400 rounded-none cursor-pointer outline-none text-xs"
+            >
+              <option value="farmer">🌾 Farmer (Gurpreet Singh)</option>
+              <option value="seller">🚜 Seller (Kahlon Agri)</option>
+              <option value="government">🏛️ Government (DAO Ludhiana)</option>
+              <option value="super_admin">⚡ Super Admin</option>
+            </select>
+          </div>
         </div>
       </div>
 

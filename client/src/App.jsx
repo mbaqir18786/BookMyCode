@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Lenis from 'lenis';
 
 import { CurrentUserProvider, useCurrentUser } from './context/CurrentUserContext';
+import { LanguageProvider } from './context/LanguageContext';
 import Navbar from './components/Navbar';
 import RoleGuard from './components/RoleGuard';
 import ChatbotWidget from './components/ChatbotWidget';
@@ -18,7 +19,6 @@ import BuyerSearch from './pages/BuyerSearch';
 import SellerDashboard from './pages/SellerDashboard';
 import GovDashboard from './pages/GovDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
-import ChannelSimulator from './pages/ChannelSimulator';
 
 function RootRedirect() {
   const { role } = useCurrentUser();
@@ -51,8 +51,9 @@ export default function App() {
   }, []);
 
   return (
-    <CurrentUserProvider>
-      <Router>
+    <LanguageProvider>
+      <CurrentUserProvider>
+        <Router>
         <div className="min-h-screen bg-[#FAF9F5] text-[#0F172A] flex flex-col font-sans selection:bg-[#EAB308] selection:text-black">
           <Navbar />
 
@@ -69,7 +70,6 @@ export default function App() {
               <Route path="/farmer/farms/:id/recommendation" element={<RoleGuard allowedRoles={['farmer']}><RecommendationPage /></RoleGuard>} />
               <Route path="/farmer/machinery" element={<RoleGuard allowedRoles={['farmer']}><MachinerySearch /></RoleGuard>} />
               <Route path="/farmer/buyers" element={<RoleGuard allowedRoles={['farmer']}><BuyerSearch /></RoleGuard>} />
-              <Route path="/farmer/ivr-channel" element={<RoleGuard allowedRoles={['farmer']}><ChannelSimulator /></RoleGuard>} />
 
               {/* Role 2: Seller Pages */}
               <Route path="/seller" element={<RoleGuard allowedRoles={['seller']}><SellerDashboard /></RoleGuard>} />
@@ -80,7 +80,6 @@ export default function App() {
               {/* Role 4: Super Admin KYC Pages */}
               <Route path="/superadmin" element={<RoleGuard allowedRoles={['super_admin']}><SuperAdminDashboard /></RoleGuard>} />
 
-              <Route path="/dev/ivr-simulator" element={<RoleGuard allowedRoles={['farmer']}><ChannelSimulator /></RoleGuard>} />
             </Routes>
           </main>
 
@@ -98,5 +97,6 @@ export default function App() {
         </div>
       </Router>
     </CurrentUserProvider>
+  </LanguageProvider>
   );
 }
