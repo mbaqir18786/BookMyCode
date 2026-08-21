@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useCurrentUser } from '../context/CurrentUserContext';
-import { Bell, Menu, X, ShieldCheck, Tractor, ShoppingBag, Landmark, Zap, MapPin } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Bell, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
-  const { currentUser, role, switchRole, notifications, fetchNotifications } = useCurrentUser();
+  const { currentUser, role, logout, notifications, fetchNotifications, isAuthenticated } = useAuth();
   const location = useLocation();
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -40,36 +40,24 @@ export default function Navbar() {
     ]
   };
 
-  const navItems = roleNavLinks[role] || roleNavLinks.farmer;
+  const navItems = roleNavLinks[role] || [];
+
+  if (!isAuthenticated) {
+    return (
+      <header className="sticky top-0 z-40 bg-[#FAF9F5] border-b-4 border-[#0F172A]">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <Link to="/" className="text-lg font-black uppercase">CROP RESIDUE <span className="bg-[#EAB308] px-1 border-2 border-[#0F172A]">PORTAL</span></Link>
+          <div className="flex gap-2 text-xs font-black uppercase">
+            <Link to="/login" className="neo-btn bg-white px-3 py-2">Sign in</Link>
+            <Link to="/signup" className="neo-btn neo-btn-primary px-3 py-2">Sign up</Link>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="sticky top-0 z-40 bg-[#FAF9F5] border-b-4 border-[#0F172A]">
-      {/* Dev-Only Role Switcher Banner */}
-      <div className="bg-[#0F172A] text-white px-4 py-2 flex flex-wrap items-center justify-between text-xs font-mono border-b-2 border-yellow-400">
-        <div className="flex items-center space-x-2">
-          <span className="bg-yellow-400 text-black px-2 py-0.5 font-bold uppercase tracking-wider">DEV ROLE SWITCHER</span>
-          <span className="text-gray-300 hidden sm:inline">Active Role Context:</span>
-          <span className="font-bold text-yellow-300 uppercase underline">{currentUser.name} ({role})</span>
-        </div>
-
-        <div className="flex items-center space-x-2 mt-1 sm:mt-0">
-          <label className="text-gray-300 font-semibold">Switch Active Role:</label>
-          <select
-            value={role}
-            onChange={(e) => {
-              switchRole(e.target.value);
-              setMobileMenuOpen(false);
-            }}
-            className="bg-white text-black font-bold px-2 py-1 border-2 border-yellow-400 rounded-none cursor-pointer outline-none text-xs"
-          >
-            <option value="farmer">🌾 Farmer (Gurpreet Singh)</option>
-            <option value="seller">🚜 Seller (Kahlon Agri & Biofuel)</option>
-            <option value="government">🏛️ Government (DAO Ludhiana)</option>
-            <option value="super_admin">⚡ Super Admin (KYC Validator)</option>
-          </select>
-        </div>
-      </div>
-
       {/* Main Navigation Bar */}
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Brand Logo & Role Tag */}
@@ -100,6 +88,8 @@ export default function Navbar() {
 
         {/* Right Actions: Notifications & Mobile Menu Toggle */}
         <div className="flex items-center space-x-3">
+          <span className="hidden sm:inline text-xs font-black uppercase">{currentUser.name}</span>
+          <button onClick={logout} className="neo-btn bg-white px-3 py-2 text-xs">Sign out</button>
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}

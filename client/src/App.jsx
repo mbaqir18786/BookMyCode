@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Lenis from 'lenis';
 
-import { CurrentUserProvider, useCurrentUser } from './context/CurrentUserContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import RoleGuard from './components/RoleGuard';
 import ChatbotWidget from './components/ChatbotWidget';
@@ -19,9 +19,16 @@ import SellerDashboard from './pages/SellerDashboard';
 import GovDashboard from './pages/GovDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import ChannelSimulator from './pages/ChannelSimulator';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import OtpVerification from './pages/OtpVerification';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 function RootRedirect() {
-  const { role } = useCurrentUser();
+  const { role, isAuthenticated, loading } = useAuth();
+  if (loading) return <div className="py-16 text-center font-black uppercase">Loading secure portal...</div>;
+  if (!isAuthenticated) return <LandingPage />;
   if (role === 'farmer') return <Navigate to="/farmer" replace />;
   if (role === 'seller') return <Navigate to="/seller" replace />;
   if (role === 'government') return <Navigate to="/admin" replace />;
@@ -51,7 +58,7 @@ export default function App() {
   }, []);
 
   return (
-    <CurrentUserProvider>
+    <AuthProvider>
       <Router>
         <div className="min-h-screen bg-[#FAF9F5] text-[#0F172A] flex flex-col font-sans selection:bg-[#EAB308] selection:text-black">
           <Navbar />
@@ -59,6 +66,11 @@ export default function App() {
           <main className="flex-1 max-w-7xl w-full mx-auto px-4 pt-6">
             <Routes>
               <Route path="/" element={<RootRedirect />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/verify-otp" element={<OtpVerification />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Role 1: Farmer Pages */}
               <Route path="/farmer" element={<RoleGuard allowedRoles={['farmer']}><FarmerDashboard /></RoleGuard>} />
@@ -97,6 +109,6 @@ export default function App() {
           </footer>
         </div>
       </Router>
-    </CurrentUserProvider>
+    </AuthProvider>
   );
 }
