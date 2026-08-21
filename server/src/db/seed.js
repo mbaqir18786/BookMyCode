@@ -95,7 +95,7 @@ async function seed() {
 
   for (const u of users) {
     await run(
-      `INSERT INTO users (id, role, name, phone, email, district, state, kyc_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO users (id, role, name, phone, email, district, state, kyc_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [u.id, u.role, u.name, u.phone, u.email, u.district, u.state, u.kyc_status]
     );
   }
@@ -132,7 +132,7 @@ async function seed() {
 
   for (const f of farms) {
     await run(
-      `INSERT INTO farms (id, user_id, name, crop_type, area_acres, latitude, longitude, address, harvest_date, next_sowing_date, budget_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO farms (id, user_id, name, crop_type, area_acres, latitude, longitude, address, harvest_date, next_sowing_date, budget_amount) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
       [f.id, f.user_id, f.name, f.crop_type, f.area_acres, f.latitude, f.longitude, f.address, f.harvest_date, f.next_sowing_date, f.budget_amount]
     );
   }
@@ -173,7 +173,7 @@ async function seed() {
 
   for (const s of sellers) {
     await run(
-      `INSERT INTO sellers (id, user_id, seller_type, business_name, phone, address, kyc_status, kyc_docs_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO sellers (id, user_id, seller_type, business_name, phone, address, kyc_status, kyc_docs_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [s.id, s.user_id, s.seller_type, s.business_name, s.phone, s.address, s.kyc_status, s.kyc_docs_url]
     );
   }
@@ -220,7 +220,7 @@ async function seed() {
 
   for (const m of machines) {
     await run(
-      `INSERT INTO machines (id, seller_id, name, type, rate_per_acre, max_capacity_acres_per_day, latitude, longitude, address, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO machines (id, seller_id, name, type, rate_per_acre, max_capacity_acres_per_day, latitude, longitude, address, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [m.id, m.seller_id, m.name, m.type, m.rate_per_acre, m.max_capacity_acres_per_day, m.latitude, m.longitude, m.address, m.status]
     );
   }
@@ -257,7 +257,7 @@ async function seed() {
 
   for (const b of buyerListings) {
     await run(
-      `INSERT INTO buyer_listings (id, seller_id, crop_type, buying_purpose, price_per_ton, required_tons, min_quality, latitude, longitude, address, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO buyer_listings (id, seller_id, crop_type, buying_purpose, price_per_ton, required_tons, min_quality, latitude, longitude, address, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
       [b.id, b.seller_id, b.crop_type, b.buying_purpose, b.price_per_ton, b.required_tons, b.min_quality, b.latitude, b.longitude, b.address, b.status]
     );
   }
@@ -294,7 +294,7 @@ async function seed() {
 
   for (const inc of incidents) {
     await run(
-      `INSERT INTO incidents (id, farm_id, latitude, longitude, district, detected_at, satellite_source, severity, repeat_offender_flag, status, officer_notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO incidents (id, farm_id, latitude, longitude, district, detected_at, satellite_source, severity, repeat_offender_flag, status, officer_notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
       [inc.id, inc.farm_id, inc.latitude, inc.longitude, inc.district, inc.detected_at, inc.satellite_source, inc.severity, inc.repeat_offender_flag, inc.status, inc.officer_notes]
     );
   }

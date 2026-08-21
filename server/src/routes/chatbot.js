@@ -24,7 +24,7 @@ router.post('/', async (req, res) => {
     }
 
     // 2. Fetch real farm details & real nearby listings
-    const farm = await get('SELECT * FROM farms WHERE id = ?', [farm_id]);
+    const farm = await get('SELECT * FROM farms WHERE id = $1', [farm_id]);
     let responseText = '';
 
     if (farm) {

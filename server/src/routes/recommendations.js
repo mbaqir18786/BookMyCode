@@ -6,7 +6,7 @@ const { get, query, calculateDistance } = require('../db');
 router.get('/:id/recommendation', async (req, res) => {
   try {
     const farmId = req.params.id;
-    const farm = await get('SELECT * FROM farms WHERE id = ?', [farmId]);
+    const farm = await get('SELECT * FROM farms WHERE id = $1', [farmId]);
 
     if (!farm) {
       return res.status(404).json({ error: 'Farm not found' });
