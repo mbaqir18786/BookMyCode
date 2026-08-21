@@ -229,8 +229,12 @@ router.post('/request-password-reset', async (req, res) => {
     const user = await get('SELECT id FROM users WHERE phone = $1', [phone]);
     if (!user) return res.status(404).json({ error: 'No account found for this phone number' });
 
-    await createOtp(phone, 'password_reset');
-    return res.json({ message: 'Password reset OTP sent successfully', phone });
+    const code = await createOtp(phone, 'password_reset');
+    const response = { message: 'Password reset OTP sent successfully', phone };
+    if (process.env.OTP_SENDER === 'development' && process.env.NODE_ENV !== 'production') {
+      response.development_otp = code;
+    }
+    return res.json(response);
   } catch (error) {
     console.error('Password reset OTP error:', error.message);
     return res.status(500).json({ error: 'Unable to send password reset OTP' });

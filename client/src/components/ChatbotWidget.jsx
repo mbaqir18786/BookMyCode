@@ -8,7 +8,7 @@ export default function ChatbotWidget() {
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: `Sat Sri Akal ${currentUser.name}! I am your AI Crop Residue Advisor. Ask me anything about nearby seeders, stubble buyers, or submit your land details!`
+      text: `Sat Sri Akal ${currentUser?.name || 'there'}! I am your AI Crop Residue Advisor. Ask me anything about nearby seeders, stubble buyers, or submit your land details!`
     }
   ]);
   const [input, setInput] = useState('');
@@ -18,6 +18,14 @@ export default function ChatbotWidget() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
+
+  useEffect(() => {
+    if (!currentUser?.name) return;
+    setMessages((prev) => {
+      if (prev.length !== 1 || prev[0].sender !== 'bot') return prev;
+      return [{ ...prev[0], text: `Sat Sri Akal ${currentUser.name}! I am your AI Crop Residue Advisor. Ask me anything about nearby seeders, stubble buyers, or submit your land details!` }];
+    });
+  }, [currentUser?.name]);
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -34,7 +42,7 @@ export default function ChatbotWidget() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userText,
-          user_id: currentUser.id,
+          user_id: currentUser?.id,
           farm_id: 'farm_1'
         })
       });
