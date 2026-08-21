@@ -7,7 +7,6 @@ export default function RoleGuard({ allowedRoles, children }) {
   const location = useLocation();
 
   if (loading) return <div className="py-16 text-center font-black uppercase">Loading secure portal...</div>;
-
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
