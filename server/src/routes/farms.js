@@ -40,20 +40,23 @@ router.post('/', async (req, res) => {
       budget_amount
     } = req.body;
 
-    if (!name || !area_acres || !latitude || !longitude || !address || !harvest_date || !next_sowing_date) {
-      return res.status(400).json({ error: 'Missing required farm fields' });
+    const resolvedAddress = address || 'Punjab/Haryana Plot';
+
+    if (!name || !area_acres || !latitude || !longitude || !harvest_date || !next_sowing_date) {
+      return res.status(400).json({ error: 'Please fill in farm name, area, location, and dates' });
     }
 
     const farmId = 'farm_' + Date.now();
     await run(
       `INSERT INTO farms (id, user_id, name, crop_type, area_acres, latitude, longitude, address, harvest_date, next_sowing_date, budget_amount)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-      [farmId, user_id, name, crop_type, Number(area_acres), Number(latitude), Number(longitude), address, harvest_date, next_sowing_date, Number(budget_amount || 0)]
+      [farmId, user_id, name, crop_type, Number(area_acres), Number(latitude), Number(longitude), resolvedAddress, harvest_date, next_sowing_date, Number(budget_amount || 0)]
     );
 
     const createdFarm = await get('SELECT * FROM farms WHERE id = $1', [farmId]);
     res.status(201).json(createdFarm);
   } catch (err) {
+    console.error('Create farm error:', err);
     res.status(500).json({ error: err.message });
   }
 });

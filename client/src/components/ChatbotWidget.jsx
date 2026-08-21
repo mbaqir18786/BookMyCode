@@ -8,7 +8,7 @@ export default function ChatbotWidget() {
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: `Sat Sri Akal ${currentUser?.name || 'there'}! I am your AI Crop Residue Advisor. Ask me anything about nearby seeders, stubble buyers, or submit your land details!`
+      text: `Namaste${currentUser?.name ? `, ${currentUser.name}` : ''}! 👋 I am your AI Crop Residue Advisor. Ask me anything about nearby seeders, stubble buyers, or submit your land details!`
     }
   ]);
   const [input, setInput] = useState('');
