@@ -216,12 +216,18 @@ router.post('/login', async (req, res) => {
       [normalizedUser, cleanDigits]
     );
 
+    console.log(`[AUTH LOGIN] Attempt with identifier: "${identifier}", cleanDigits: "${cleanDigits}"`);
+    console.log(`[AUTH LOGIN] Found user:`, user ? { id: user.id, username: user.username, role: user.role } : 'NOT FOUND');
+
     if (!user) {
+      console.log(`[AUTH LOGIN] User not found for identifier: "${identifier}"`);
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     const isMatch = (user.password_hash && await bcrypt.compare(password, user.password_hash).catch(() => false))
       || password === user.password_hash;
+
+    console.log(`[AUTH LOGIN] Password match result: ${isMatch}`);
 
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid username or password' });
