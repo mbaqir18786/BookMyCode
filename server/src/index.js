@@ -13,6 +13,7 @@ const superadminRouter = require('./routes/superadmin');
 const chatbotRouter = require('./routes/chatbot');
 const channelsRouter = require('./routes/channels');
 const notificationsRouter = require('./routes/notifications');
+const optionsRouter = require('./routes/options');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -51,6 +52,7 @@ app.use('/api/superadmin', superadminRouter);
 app.use('/api/chat', chatbotRouter);
 app.use('/api/v1', channelsRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/options', optionsRouter);
 
 // Root Health Check
 app.get('/api/health', (req, res) => {

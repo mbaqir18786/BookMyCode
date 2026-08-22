@@ -47,7 +47,6 @@ export default function KycVerificationPage() {
     kyc_status: 'pending'
   });
 
-  // Local simulated file names for display
   const [fileNames, setFileNames] = useState({
     aadhar: '',
     pan: '',
@@ -55,9 +54,33 @@ export default function KycVerificationPage() {
     udyam: ''
   });
 
+  const [dbOptions, setDbOptions] = useState({
+    seller_types: [
+      { value: 'machinery_provider', label: 'Machinery Provider (Equipment Rental)' },
+      { value: 'residue_buyer', label: 'Residue Buyer (Biomass & Paddy Straw Buyer)' },
+      { value: 'paper_mill', label: 'Paper Mill' },
+      { value: 'compost_plant', label: 'Compost Plant' }
+    ]
+  });
+
   useEffect(() => {
     fetchSellerProfile();
+    fetchOptions();
   }, [currentUser.id]);
+
+  const fetchOptions = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/options`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.seller_types && data.seller_types.length > 0) {
+          setDbOptions(prev => ({ ...prev, ...data }));
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch DB options:', e);
+    }
+  };
 
   const fetchSellerProfile = async () => {
     try {
@@ -251,8 +274,9 @@ export default function KycVerificationPage() {
                 onChange={(e) => setFormData({ ...formData, seller_type: e.target.value })}
                 className="neo-input"
               >
-                <option value="machinery_provider">Machinery Provider (Equipment Rental)</option>
-                <option value="residue_buyer">Residue Buyer (Biomass & Paddy Straw Buyer)</option>
+                {dbOptions.seller_types.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
 

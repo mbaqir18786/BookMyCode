@@ -48,10 +48,42 @@ export default function SellerDashboard() {
     longitude: '75.8800'
   });
 
+  const [dbOptions, setDbOptions] = useState({
+    seller_types: [
+      { value: 'machinery_provider', label: 'Machinery Provider (Equipment Rental)' },
+      { value: 'residue_buyer', label: 'Residue Buyer (Biomass & Paddy Straw Buyer)' },
+      { value: 'paper_mill', label: 'Paper Mill' },
+      { value: 'compost_plant', label: 'Compost Plant' }
+    ],
+    machine_types: [
+      { value: 'super_seeder', label: 'Super Seeder' },
+      { value: 'happy_seeder', label: 'Happy Seeder' },
+      { value: 'baler', label: 'Baler' },
+      { value: 'paddy_straw_chopper', label: 'Paddy Straw Chopper' },
+      { value: 'zero_till_drill', label: 'Zero Till Drill' },
+      { value: 'combine_harvester', label: 'Combine Harvester' },
+      { value: 'rotavator', label: 'Rotavator' }
+    ],
+    crops: ['Paddy Straw', 'Basmati Straw', 'Mustard Husk', 'Wheat Straw', 'Cotton Stalks']
+  });
+
   useEffect(() => {
     fetchProfile();
     fetchMyListings();
+    fetchOptions();
   }, [currentUser.id]);
+
+  const fetchOptions = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/options`);
+      if (res.ok) {
+        const data = await res.json();
+        setDbOptions(prev => ({ ...prev, ...data }));
+      }
+    } catch (e) {
+      console.error('Failed to fetch options in SellerDashboard:', e);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -248,8 +280,9 @@ export default function SellerDashboard() {
                 onChange={(e) => setKycForm({ ...kycForm, seller_type: e.target.value })}
                 className="neo-input"
               >
-                <option value="machinery_provider">Machinery Provider (Rents Equipment)</option>
-                <option value="residue_buyer">Residue Buyer (Purchases Paddy Straw)</option>
+                {dbOptions.seller_types.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -464,11 +497,9 @@ export default function SellerDashboard() {
                 onChange={(e) => setMachineForm({ ...machineForm, type: e.target.value })}
                 className="neo-input"
               >
-                <option value="Super Seeder">Super Seeder</option>
-                <option value="Happy Seeder">Happy Seeder</option>
-                <option value="Paddy Straw Chopper / Mulcher">Paddy Straw Chopper / Mulcher</option>
-                <option value="Baler">Baler</option>
-                <option value="Rotavator">Rotavator</option>
+                {dbOptions.machine_types.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
             <div className="space-y-1">
