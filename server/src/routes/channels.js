@@ -4,7 +4,7 @@ const { get, query, calculateDistance } = require('../db');
 
 // Helper to compute recommendation object
 async function computeRecommendationForFarm(farmId) {
-  const farm = await get('SELECT * FROM farms WHERE id = ?', [farmId]);
+  const farm = await get('SELECT * FROM farms WHERE id = $1', [farmId]);
   if (!farm) return null;
 
   const harvestDate = new Date(farm.harvest_date);

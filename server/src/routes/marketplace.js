@@ -18,12 +18,12 @@ router.get('/machinery', async (req, res) => {
     const params = [];
 
     if (machine_type && machine_type !== 'All') {
-      sql += ` AND m.type = ?`;
+      sql += ` AND m.type = $${params.length + 1}`;
       params.push(machine_type);
     }
 
     if (max_rate) {
-      sql += ` AND m.rate_per_acre <= ?`;
+      sql += ` AND m.rate_per_acre <= $${params.length + 1}`;
       params.push(Number(max_rate));
     }
 
@@ -53,7 +53,7 @@ router.get('/machinery/:id', async (req, res) => {
       `SELECT m.*, s.business_name, s.phone as seller_phone, s.kyc_status, s.address as seller_address
        FROM machines m
        JOIN sellers s ON m.seller_id = s.id
-       WHERE m.id = ? AND s.kyc_status = 'approved'`,
+      WHERE m.id = $1 AND s.kyc_status = 'approved'`,
       [req.params.id]
     );
 
@@ -82,12 +82,12 @@ router.get('/buyers', async (req, res) => {
     const params = [];
 
     if (crop_type && crop_type !== 'All') {
-      sql += ` AND b.crop_type = ?`;
+      sql += ` AND b.crop_type = $${params.length + 1}`;
       params.push(crop_type);
     }
 
     if (min_price) {
-      sql += ` AND b.price_per_ton >= ?`;
+      sql += ` AND b.price_per_ton >= $${params.length + 1}`;
       params.push(Number(min_price));
     }
 
@@ -115,7 +115,7 @@ router.get('/buyers/:id', async (req, res) => {
       `SELECT b.*, s.business_name, s.phone as seller_phone, s.kyc_status, s.address as seller_address
        FROM buyer_listings b
        JOIN sellers s ON b.seller_id = s.id
-       WHERE b.id = ? AND s.kyc_status = 'approved'`,
+      WHERE b.id = $1 AND s.kyc_status = 'approved'`,
       [req.params.id]
     );
 
@@ -140,20 +140,20 @@ router.post('/bookings', async (req, res) => {
     const bookingId = 'book_' + Date.now();
     await run(
       `INSERT INTO bookings (id, farmer_id, farm_id, machine_id, booking_date, acres, total_price, status, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8)`,
       [bookingId, farmer_id, farm_id, machine_id, booking_date, Number(acres), Number(total_price), notes || '']
     );
 
     // Create a real notification for the seller & farmer
-    const machine = await get('SELECT m.*, s.user_id as seller_user_id FROM machines m JOIN sellers s ON m.seller_id = s.id WHERE m.id = ?', [machine_id]);
+    const machine = await get('SELECT m.*, s.user_id as seller_user_id FROM machines m JOIN sellers s ON m.seller_id = s.id WHERE m.id = $1', [machine_id]);
     if (machine) {
       await run(
-        `INSERT INTO notifications (id, user_id, title, message, type) VALUES (?, ?, ?, ?, 'info')`,
+        `INSERT INTO notifications (id, user_id, title, message, type) VALUES ($1, $2, $3, $4, 'info')`,
         ['notif_' + Date.now(), machine.seller_user_id, 'New Machinery Booking Request', `Booking request received for ${machine.name} on ${booking_date} for ${acres} acres.`]
       );
     }
 
-    const booking = await get('SELECT * FROM bookings WHERE id = ?', [bookingId]);
+    const booking = await get('SELECT * FROM bookings WHERE id = $1', [bookingId]);
     res.status(201).json(booking);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -171,20 +171,20 @@ router.post('/connection-requests', async (req, res) => {
     const requestId = 'conn_' + Date.now();
     await run(
       `INSERT INTO connection_requests (id, farmer_id, farm_id, buyer_listing_id, estimated_tons, offered_price_per_ton, total_estimated_value, status, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8)`,
       [requestId, farmer_id, farm_id, buyer_listing_id, Number(estimated_tons), Number(offered_price_per_ton), Number(total_estimated_value), notes || '']
     );
 
     // Create real notification
-    const buyerListing = await get('SELECT b.*, s.user_id as seller_user_id FROM buyer_listings b JOIN sellers s ON b.seller_id = s.id WHERE b.id = ?', [buyer_listing_id]);
+    const buyerListing = await get('SELECT b.*, s.user_id as seller_user_id FROM buyer_listings b JOIN sellers s ON b.seller_id = s.id WHERE b.id = $1', [buyer_listing_id]);
     if (buyerListing) {
       await run(
-        `INSERT INTO notifications (id, user_id, title, message, type) VALUES (?, ?, ?, ?, 'info')`,
+        `INSERT INTO notifications (id, user_id, title, message, type) VALUES ($1, $2, $3, $4, 'info')`,
         ['notif_' + Date.now(), buyerListing.seller_user_id, 'New Residue Purchase Offer', `A farmer offered ${estimated_tons} tons of residue at ₹${offered_price_per_ton}/ton.`]
       );
     }
 
-    const connRequest = await get('SELECT * FROM connection_requests WHERE id = ?', [requestId]);
+    const connRequest = await get('SELECT * FROM connection_requests WHERE id = $1', [requestId]);
     res.status(201).json(connRequest);
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -103,9 +103,22 @@ router.post('/', async (req, res) => {
       get('SELECT * FROM users WHERE id = ?', [user_id])
     ]);
 
+<<<<<<< HEAD
     let farmSection = 'The farmer has no registered farm yet.';
     let machinerySection = 'No nearby machinery data available.';
     let buyerSection = 'No nearby buyer data available.';
+=======
+    if (matchAcreage) {
+      const val = parseInt(matchAcreage[1], 10);
+      if (val > 100) {
+        sanityWarning = `⚠️ **Data Check Warning**: You mentioned ${val} acres. That seems extraordinarily large for a single plot! Please double-check if you typed an extra digit (e.g., 10 acres instead of 100).`;
+      }
+    }
+
+    // 2. Fetch real farm details & real nearby listings
+    const farm = await get('SELECT * FROM farms WHERE id = $1', [farm_id]);
+    let responseText = '';
+>>>>>>> feature/authentication
 
     if (farm) {
       const daysLeft = Math.max(0, Math.ceil(

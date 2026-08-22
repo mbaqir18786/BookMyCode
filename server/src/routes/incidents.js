@@ -13,12 +13,12 @@ router.get('/', async (req, res) => {
       FROM incidents i
       LEFT JOIN farms f ON i.farm_id = f.id
       LEFT JOIN users u ON f.user_id = u.id
-      WHERE i.district = ?
+      WHERE i.district = $1
     `;
     const params = [district];
 
     if (status && status !== 'All') {
-      sql += ` AND i.status = ?`;
+      sql += ` AND i.status = $${params.length + 1}`;
       params.push(status);
     }
 
@@ -39,7 +39,7 @@ router.get('/:id', async (req, res) => {
        FROM incidents i
        LEFT JOIN farms f ON i.farm_id = f.id
        LEFT JOIN users u ON f.user_id = u.id
-       WHERE i.id = ?`,
+      WHERE i.id = $1`,
       [req.params.id]
     );
 
@@ -72,7 +72,7 @@ router.get('/:id', async (req, res) => {
 
     // Fetch past incident history at this farm or location
     const history = await query(
-      `SELECT * FROM incidents WHERE (farm_id = ? OR (ABS(latitude - ?) < 0.05 AND ABS(longitude - ?) < 0.05)) AND id != ? ORDER BY detected_at DESC`,
+      `SELECT * FROM incidents WHERE (farm_id = $1 OR (ABS(latitude - $2) < 0.05 AND ABS(longitude - $3) < 0.05)) AND id != $4 ORDER BY detected_at DESC`,
       [incident.farm_id || '', incident.latitude, incident.longitude, incident.id]
     );
 
@@ -93,23 +93,23 @@ router.post('/:id/action', async (req, res) => {
     const { action_type, officer_notes, status = 'action_taken', admin_id = 'usr_gov_1' } = req.body;
     const incidentId = req.params.id;
 
-    const incident = await get('SELECT * FROM incidents WHERE id = ?', [incidentId]);
+    const incident = await get('SELECT * FROM incidents WHERE id = $1', [incidentId]);
     if (!incident) return res.status(404).json({ error: 'Incident not found' });
 
     const formattedAction = `[${new Date().toISOString().slice(0, 10)}] ${action_type}: ${officer_notes}`;
 
     await run(
-      `UPDATE incidents SET status = ?, officer_action = ?, officer_notes = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      `UPDATE incidents SET status = $1, officer_action = $2, officer_notes = $3, resolved_at = CURRENT_TIMESTAMP WHERE id = $4`,
       [status, formattedAction, officer_notes, incidentId]
     );
 
     // Log to audit table
     await run(
-      `INSERT INTO audit_logs (id, admin_id, action, target_type, target_id, details) VALUES (?, ?, ?, 'incident', ?, ?)`,
+      `INSERT INTO audit_logs (id, admin_id, action, target_type, target_id, details) VALUES ($1, $2, $3, 'incident', $4, $5)`,
       ['audit_' + Date.now(), admin_id, action_type, incidentId, officer_notes]
     );
 
-    const updatedIncident = await get('SELECT * FROM incidents WHERE id = ?', [incidentId]);
+    const updatedIncident = await get('SELECT * FROM incidents WHERE id = $1', [incidentId]);
     res.json(updatedIncident);
   } catch (err) {
     res.status(500).json({ error: err.message });

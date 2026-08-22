@@ -1,62 +1,52 @@
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-const fs = require('fs');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
-const dbPath = path.join(__dirname, '../../database.sqlite');
-const dbDir = path.dirname(dbPath);
+const ws = require('ws');
+const { Pool, neonConfig } = require('@neondatabase/serverless');
 
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+// Enable WebSocket support for Neon to bypass network firewall restrictions on port 5432
+if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('neon.tech')) {
+  neonConfig.webSocketConstructor = ws;
 }
 
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error connecting to SQLite database:', err.message);
-  } else {
-    console.log('Connected to SQLite database at:', dbPath);
-  }
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
 
-// Helper wrapper for async database operations
-const query = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
-    });
-  });
+pool.on('error', (err) => {
+  console.error('Unexpected PostgreSQL pool error:', err.message);
+});
+
+// Execute SELECT queries
+const query = async (sql, params = []) => {
+  const result = await pool.query(sql, params);
+  return result.rows;
 };
 
-const get = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) return reject(err);
-      resolve(row);
-    });
-  });
+// Execute a SELECT expecting one row
+const get = async (sql, params = []) => {
+  const result = await pool.query(sql, params);
+  return result.rows[0] || null;
 };
 
-const run = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, function (err) {
-      if (err) return reject(err);
-      resolve({ id: this.lastID, changes: this.changes });
-    });
-  });
+// Execute INSERT / UPDATE / DELETE
+const run = async (sql, params = []) => {
+  const result = await pool.query(sql, params);
+  return {
+    rows: result.rows,
+    rowCount: result.rowCount
+  };
 };
 
-const exec = (sql) => {
-  return new Promise((resolve, reject) => {
-    db.exec(sql, (err) => {
-      if (err) return reject(err);
-      resolve();
-    });
-  });
+// Execute multiple SQL statements
+const exec = async (sql) => {
+  await pool.query(sql);
 };
 
-// Haversine distance calculation helper function in kilometers
+// Haversine distance calculation in kilometers
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Earth's radius in km
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -66,14 +56,14 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Math.round(R * c * 10) / 10; // Rounded to 1 decimal place
+  return Math.round(R * c * 10) / 10;
 }
 
 module.exports = {
-  db,
+  pool,
   query,
   get,
   run,
   exec,
-  calculateDistance,
+  calculateDistance
 };

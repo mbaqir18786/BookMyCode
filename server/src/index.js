@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-const { query, get } = require('./db');
+const authRouter = require('./routes/auth');
 const farmsRouter = require('./routes/farms');
 const sellersRouter = require('./routes/sellers');
 const marketplaceRouter = require('./routes/marketplace');
@@ -20,6 +20,7 @@ app.use(cors());
 app.use(express.json());
 
 // API Routes
+app.use('/api/auth', authRouter);
 app.use('/api/farms', farmsRouter);
 app.use('/api/sellers', sellersRouter);
 app.use('/api/marketplace', marketplaceRouter);
@@ -31,21 +32,15 @@ app.use('/api/chat', chatbotRouter);
 app.use('/api/v1', channelsRouter);
 app.use('/api/notifications', notificationsRouter);
 
-// GET /api/users - Fetch users list for dev role switcher
-app.get('/api/users', async (req, res) => {
-  try {
-    const users = await query('SELECT * FROM users ORDER BY created_at ASC');
-    res.json(users);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // Root Health Check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Integrated Crop Residue Management Platform API Server running' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server listening on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server listening on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;

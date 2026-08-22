@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldAlert, Tractor, Flame, DollarSign, PhoneCall, CheckCircle2, ArrowRight, Zap } from 'lucide-react';
+import { Flame, DollarSign, Zap, ArrowRight } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -14,20 +14,20 @@ export default function LandingPage() {
             <span className="bg-white px-2 border-4 border-[#0F172A]">SELL IT OR CLEAR IT.</span>
           </h1>
           <p className="text-lg md:text-xl font-bold text-[#0F172A] max-w-2xl bg-white/80 p-4 border-2 border-black">
-            Connecting paddy farmers across Punjab & Haryana to verified machinery rentals (Super Seeders, Happy Seeders) and biofuel buyers <span className="underline">before</span> harvest deadlines hit.
+            Connecting paddy farmers across Punjab &amp; Haryana to verified machinery rentals (Super Seeders, Happy Seeders) and biofuel buyers <span className="underline">before</span> harvest deadlines hit.
           </p>
 
           <div className="flex flex-wrap gap-4 pt-2">
-            <Link to="/farmer" className="neo-btn neo-btn-primary text-base py-3.5 px-6">
-              🌾 Farmer Portal
+            <Link to="/signup" className="neo-btn neo-btn-primary text-base py-3.5 px-6">
+              🌾 I'm a Farmer
             </Link>
-            <Link to="/seller" className="neo-btn bg-white text-black text-base py-3.5 px-6">
-              🚜 Equipment & Biofuel Buyer Portal
-            </Link>
-            <Link to="/admin" className="neo-btn neo-btn-danger text-base py-3.5 px-6">
-              🏛️ District Government Incident Hub
+            <Link to="/signup?role=seller" className="neo-btn bg-white text-black text-base py-3.5 px-6">
+              🚜 I'm an Equipment / Buyer
             </Link>
           </div>
+          <p className="text-xs font-bold text-[#0F172A]/70">
+            Already registered? <Link to="/login" className="underline font-black">Sign In →</Link>
+          </p>
         </div>
       </section>
 
@@ -39,7 +39,7 @@ export default function LandingPage() {
           </div>
           <h3 className="text-xl font-black uppercase">1. Narrow Sowing Window</h3>
           <p className="font-semibold text-sm text-gray-700">
-            Farmers face a strict 2-3 week deadline between paddy harvest and wheat sowing. Hiring equipment is scarce and expensive during peak demand.
+            Farmers face a strict 2–3 week deadline between paddy harvest and wheat sowing. Equipment is scarce and expensive during peak demand.
           </p>
         </div>
 
@@ -59,74 +59,60 @@ export default function LandingPage() {
           </div>
           <h3 className="text-xl font-black uppercase">3. Real-Time Recommendation</h3>
           <p className="font-semibold text-sm text-gray-700">
-            Our recommendation algorithm computes distance, machinery capacity, and buyer prices to present farmers with their single best financial strategy.
+            Our recommendation engine computes distance, machinery capacity, and buyer prices to give farmers their single best financial strategy.
           </p>
         </div>
       </section>
 
-      {/* Role Navigation Tiles */}
+      {/* Role Navigation — Only public-facing roles */}
       <section className="space-y-6">
         <h2 className="text-2xl font-black uppercase tracking-tight border-b-4 border-black pb-2">
-          Select Your Role Dashboard
+          Who is this for?
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Link to="/farmer" className="neo-box p-6 bg-[#DCFCE7] hover:bg-green-200 flex flex-col justify-between space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Link to="/signup?role=farmer" className="neo-box p-6 bg-[#DCFCE7] hover:bg-green-200 flex flex-col justify-between space-y-4">
             <div className="space-y-2">
-              <span className="neo-badge bg-[#15803D] text-white">ROLE 1</span>
+              <span className="neo-badge bg-[#15803D] text-white">FOR FARMERS</span>
               <h3 className="text-2xl font-black">FARMER PORTAL</h3>
               <p className="text-xs font-semibold text-gray-800">
-                Register land plots, calculate harvest timelines, view machinery vs. buyer recommendations, and book equipment.
+                Register your land plots, get machinery booking recommendations, and connect directly with straw buyers before harvest deadlines.
               </p>
+              <ul className="text-xs font-semibold text-gray-700 space-y-1 pt-1">
+                <li>✅ Book Super Seeders &amp; Happy Seeders</li>
+                <li>✅ Sell crop residue to verified buyers</li>
+                <li>✅ AI-powered crop management advice</li>
+              </ul>
             </div>
             <div className="flex items-center text-sm font-black text-[#15803D]">
-              <span>Enter Portal</span>
+              <span>Register as Farmer</span>
               <ArrowRight className="w-4 h-4 ml-1" />
             </div>
           </Link>
 
-          <Link to="/seller" className="neo-box p-6 bg-[#FEF08A] hover:bg-yellow-200 flex flex-col justify-between space-y-4">
+          <Link to="/signup?role=seller" className="neo-box p-6 bg-[#FEF08A] hover:bg-yellow-200 flex flex-col justify-between space-y-4">
             <div className="space-y-2">
-              <span className="neo-badge bg-[#EAB308] text-black">ROLE 2</span>
-              <h3 className="text-2xl font-black">SELLER MARKETPLACE</h3>
+              <span className="neo-badge bg-[#EAB308] text-black">FOR EQUIPMENT &amp; BUYERS</span>
+              <h3 className="text-2xl font-black">SELLER PORTAL</h3>
               <p className="text-xs font-semibold text-gray-800">
-                List Super Seeders/Balers or post residue purchase offers. Submit KYC verification documents to gain live status.
+                List your Super Seeders, Balers, or Happy Seeders for rent — or post residue purchase offers to source paddy straw from farmers.
               </p>
+              <ul className="text-xs font-semibold text-gray-700 space-y-1 pt-1">
+                <li>✅ List machinery with live availability</li>
+                <li>✅ Post residue purchase offers</li>
+                <li>✅ Get KYC-verified for a trust badge</li>
+              </ul>
             </div>
             <div className="flex items-center text-sm font-black text-[#EAB308]">
-              <span>Manage Listings</span>
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </div>
-          </Link>
-
-          <Link to="/admin" className="neo-box p-6 bg-[#FFEDD5] hover:bg-orange-200 flex flex-col justify-between space-y-4">
-            <div className="space-y-2">
-              <span className="neo-badge bg-[#C2410C] text-white">ROLE 3</span>
-              <h3 className="text-2xl font-black">GOVERNMENT DAO</h3>
-              <p className="text-xs font-semibold text-gray-800">
-                Track satellite fire hotspots (VIIRS/MODIS), review repeat offender history, check nearby resource gaps, and log officer actions.
-              </p>
-            </div>
-            <div className="flex items-center text-sm font-black text-[#C2410C]">
-              <span>Incident Map</span>
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </div>
-          </Link>
-
-          <Link to="/superadmin" className="neo-box p-6 bg-[#E0F2FE] hover:bg-sky-200 flex flex-col justify-between space-y-4">
-            <div className="space-y-2">
-              <span className="neo-badge bg-[#0284C7] text-white">ROLE 4</span>
-              <h3 className="text-2xl font-black">SUPER ADMIN</h3>
-              <p className="text-xs font-semibold text-gray-800">
-                Review pending seller KYC applications, approve/reject submissions with live DB state impact, and audit platform activities.
-              </p>
-            </div>
-            <div className="flex items-center text-sm font-black text-[#0284C7]">
-              <span>KYC Queue</span>
+              <span>Register as Seller</span>
               <ArrowRight className="w-4 h-4 ml-1" />
             </div>
           </Link>
         </div>
+
+        <p className="text-xs font-semibold text-gray-500 text-center border border-dashed border-gray-300 p-3 bg-gray-50">
+          🏛️ Government officials and administrators — please contact your district nodal officer for portal access credentials.
+        </p>
       </section>
     </div>
   );

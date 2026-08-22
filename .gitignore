@@ -1,6 +1,26 @@
-node_modules/
+# Environment variables / secrets
 .env
-.DS_Store
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build output
 dist/
 build/
-database.sqlite
+
+# Local databases
+*.sqlite
+*.sqlite3
+*.db
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
