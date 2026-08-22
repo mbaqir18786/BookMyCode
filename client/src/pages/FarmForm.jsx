@@ -81,10 +81,30 @@ export default function FarmForm() {
   const [error, setError] = useState('');
   const [areaValue, setAreaValue] = useState('');
   const [areaUnit, setAreaUnit] = useState('Acres');
+  const [cropOptions, setCropOptions] = useState([
+    'Paddy (Rice)', 'Wheat', 'Maize', 'Cotton', 'Mustard', 'Sugarcane',
+    'Bajra', 'Barley', 'Soybean', 'Potato', 'Chickpea', 'Lentil',
+    'Groundnut', 'Sunflower', 'Sesame', 'Sorghum', 'Turmeric', 'Tomato', 'Onion'
+  ]);
 
   useEffect(() => {
     if (isEdit) fetchFarm();
+    fetchCropOptions();
   }, [id]);
+
+  const fetchCropOptions = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/farms/crops`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          setCropOptions(data);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch crop options', e);
+    }
+  };
 
   const fetchFarm = async () => {
     try {
@@ -235,9 +255,9 @@ export default function FarmForm() {
           <div className="space-y-1">
             <label className="text-xs font-black uppercase tracking-wider text-gray-800">Crop Type *</label>
             <select value={formData.crop_type} onChange={(e) => setFormData({ ...formData, crop_type: e.target.value })} className="neo-input">
-              <option value="Paddy (Rice)">Paddy (Rice)</option>
-              <option value="Basmati Rice">Basmati Rice</option>
-              <option value="Coarse Rice">Coarse Rice</option>
+              {cropOptions.map(crop => (
+                <option key={crop} value={crop}>{crop}</option>
+              ))}
             </select>
           </div>
           <div className="space-y-1">

@@ -13,6 +13,16 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/farms/crops - Get unique crop types
+router.get('/crops', async (req, res) => {
+  try {
+    const crops = await query('SELECT DISTINCT crop_type FROM farms ORDER BY crop_type');
+    res.json(crops.map(row => row.crop_type));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/farms/:id - Get single farm detail
 router.get('/:id', async (req, res) => {
   try {
