@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useCurrentUser } from '../context/CurrentUserContext';
 import { ArrowLeft, Save, MapPin, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import API_BASE_URL from '../config/api';
 
 // Punjab & Haryana districts with their approximate center coordinates
 const DISTRICTS = {
@@ -87,7 +88,7 @@ export default function FarmForm() {
 
   const fetchFarm = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/farms/${id}`);
+      const res = await fetch(`${API_BASE_URL}/api/farms/${id}`);
       if (res.ok) {
         const data = await res.json();
         setFormData({
@@ -159,7 +160,7 @@ export default function FarmForm() {
 
     try {
       setSubmitting(true);
-      const url = isEdit ? `http://localhost:5000/api/farms/${id}` : 'http://localhost:5000/api/farms';
+      const url = isEdit ? `${API_BASE_URL}/api/farms/${id}` : `${API_BASE_URL}/api/farms`;
       const method = isEdit ? 'PUT' : 'POST';
       const resolvedAddress = formData.address || (selectedDistrict ? `${selectedDistrict}, ${selectedState}` : 'Farm Plot Location');
 

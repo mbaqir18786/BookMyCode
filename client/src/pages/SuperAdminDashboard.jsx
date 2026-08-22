@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCurrentUser } from '../context/CurrentUserContext';
 import { ShieldCheck, CheckCircle2, XCircle, AlertCircle, FileText, Lock, RefreshCw } from 'lucide-react';
+import API_BASE_URL from '../config/api';
 
 export default function SuperAdminDashboard() {
   const { currentUser } = useCurrentUser();
@@ -18,8 +19,8 @@ export default function SuperAdminDashboard() {
     try {
       setLoading(true);
       const [sellersRes, logsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/superadmin/kyc-queue'),
-        fetch('http://localhost:5000/api/superadmin/audit-logs')
+        fetch(`${API_BASE_URL}/api/superadmin/kyc-queue`),
+        fetch(`${API_BASE_URL}/api/superadmin/audit-logs`)
       ]);
 
       if (sellersRes.ok && logsRes.ok) {
@@ -38,7 +39,7 @@ export default function SuperAdminDashboard() {
   const handleApprove = async (sellerId) => {
     try {
       setProcessingId(sellerId);
-      const res = await fetch(`http://localhost:5000/api/superadmin/kyc/${sellerId}/approve`, {
+      const res = await fetch(`${API_BASE_URL}/api/superadmin/kyc/${sellerId}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ admin_id: currentUser.id, notes: 'Verified business registration and identity' })
@@ -60,7 +61,7 @@ export default function SuperAdminDashboard() {
 
     try {
       setProcessingId(sellerId);
-      const res = await fetch(`http://localhost:5000/api/superadmin/kyc/${sellerId}/reject`, {
+      const res = await fetch(`${API_BASE_URL}/api/superadmin/kyc/${sellerId}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ admin_id: currentUser.id, reason })

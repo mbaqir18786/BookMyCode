@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCurrentUser } from '../context/CurrentUserContext';
 import { ShoppingBag, MapPin, DollarSign, ShieldCheck, CheckCircle2, Factory } from 'lucide-react';
+import API_BASE_URL from '../config/api';
 
 export default function BuyerSearch() {
   const { currentUser } = useCurrentUser();
@@ -27,7 +28,7 @@ export default function BuyerSearch() {
 
   const fetchFarms = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/farms?user_id=${currentUser.id}`);
+      const res = await fetch(`${API_BASE_URL}/api/farms?user_id=${currentUser.id}`);
       if (res.ok) {
         const data = await res.json();
         setFarms(data);
@@ -44,7 +45,7 @@ export default function BuyerSearch() {
   const fetchBuyers = async () => {
     try {
       setLoading(true);
-      const url = `http://localhost:5000/api/marketplace/buyers?max_distance_km=${maxDistance}`;
+      const url = `${API_BASE_URL}/api/marketplace/buyers?max_distance_km=${maxDistance}`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -65,7 +66,7 @@ export default function BuyerSearch() {
       setSubmitting(true);
       const totalVal = Math.round(Number(estimatedTons) * Number(offeredPrice));
 
-      const res = await fetch('http://localhost:5000/api/marketplace/connection-requests', {
+      const res = await fetch(`${API_BASE_URL}/api/marketplace/connection-requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

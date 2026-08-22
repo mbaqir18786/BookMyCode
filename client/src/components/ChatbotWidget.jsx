@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, X, Send, Bot, Sparkles, Loader2, ChevronDown } from 'lucide-react';
 import { useCurrentUser } from '../context/CurrentUserContext';
+import API_BASE_URL from '../config/api';
 
 // ── Simple markdown renderer ──────────────────────────────────────────────────
 function MarkdownText({ text }) {
@@ -125,7 +126,7 @@ export default function ChatbotWidget() {
       .map((m) => ({ role: m.role, text: m.text }));
 
     try {
-      const res = await fetch('http://localhost:5000/api/chat', {
+      const res = await fetch(`${API_BASE_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

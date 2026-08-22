@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaf
 import L from 'leaflet';
 import { useCurrentUser } from '../context/CurrentUserContext';
 import { Flame, AlertTriangle, ShieldAlert, CheckCircle2, MapPin, Search, FileText, UserCheck, Clock, Layers } from 'lucide-react';
+import API_BASE_URL from '../config/api';
 
 // Custom Leaflet Fire Icon Fix
 const fireIcon = new L.Icon({
@@ -58,7 +59,7 @@ export default function GovDashboard() {
   const fetchIncidents = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:5000/api/incidents?district=${district}`);
+      const res = await fetch(`${API_BASE_URL}/api/incidents?district=${district}`);
       if (res.ok) {
         const data = await res.json();
         setIncidents(data);
@@ -74,7 +75,7 @@ export default function GovDashboard() {
     setSelectedIncidentId(id);
     try {
       setDetailLoading(true);
-      const res = await fetch(`http://localhost:5000/api/incidents/${id}`);
+      const res = await fetch(`${API_BASE_URL}/api/incidents/${id}`);
       if (res.ok) {
         const data = await res.json();
         setIncidentDetail(data);
@@ -92,7 +93,7 @@ export default function GovDashboard() {
 
     try {
       setSubmittingAction(true);
-      const res = await fetch(`http://localhost:5000/api/incidents/${selectedIncidentId}/action`, {
+      const res = await fetch(`${API_BASE_URL}/api/incidents/${selectedIncidentId}/action`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

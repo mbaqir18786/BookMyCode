@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCurrentUser } from '../context/CurrentUserContext';
 import { PlusCircle, MapPin, Calendar, Trash2, Edit3, Sparkles } from 'lucide-react';
+import API_BASE_URL from '../config/api';
 
 export default function FarmsList() {
   const { currentUser } = useCurrentUser();
@@ -15,7 +16,7 @@ export default function FarmsList() {
   const fetchFarms = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:5000/api/farms?user_id=${currentUser.id}`);
+      const res = await fetch(`${API_BASE_URL}/api/farms?user_id=${currentUser.id}`);
       if (res.ok) {
         const data = await res.json();
         setFarms(data);
@@ -30,7 +31,7 @@ export default function FarmsList() {
   const deleteFarm = async (id) => {
     if (!window.confirm('Are you sure you want to remove this farm plot?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/farms/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/api/farms/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchFarms();
       }

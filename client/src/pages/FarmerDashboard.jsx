@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCurrentUser } from '../context/CurrentUserContext';
 import { PlusCircle, Tractor, ShoppingBag, Sparkles, MapPin, Calendar, PhoneCall, MessageSquare, Smartphone, CheckCircle2 } from 'lucide-react';
+import API_BASE_URL from '../config/api';
 
 export default function FarmerDashboard() {
   const { currentUser } = useCurrentUser();
@@ -17,7 +18,7 @@ export default function FarmerDashboard() {
   const fetchFarms = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:5000/api/farms?user_id=${currentUser.id}`);
+      const res = await fetch(`${API_BASE_URL}/api/farms?user_id=${currentUser.id}`);
       if (res.ok) {
         const data = await res.json();
         setFarms(data);

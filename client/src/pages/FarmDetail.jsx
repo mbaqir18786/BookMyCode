@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Sparkles, MapPin, Calendar, Edit3, Trash2, Tractor, ShoppingBag } from 'lucide-react';
+import API_BASE_URL from '../config/api';
 
 export default function FarmDetail() {
   const { id } = useParams();
@@ -15,7 +16,7 @@ export default function FarmDetail() {
   const fetchFarm = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:5000/api/farms/${id}`);
+      const res = await fetch(`${API_BASE_URL}/api/farms/${id}`);
       if (res.ok) {
         const data = await res.json();
         setFarm(data);
@@ -30,7 +31,7 @@ export default function FarmDetail() {
   const deleteFarm = async () => {
     if (!window.confirm('Delete this plot record?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/farms/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/api/farms/${id}`, { method: 'DELETE' });
       if (res.ok) navigate('/farmer/farms');
     } catch (e) {
       console.error(e);

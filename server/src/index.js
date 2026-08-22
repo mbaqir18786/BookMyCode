@@ -16,7 +16,25 @@ const notificationsRouter = require('./routes/notifications');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// CORS Configuration
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    // Allow all vercel preview and production subdomains
+    if (origin.endsWith('.vercel.app') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, true); // Permissive for initial ease of deployment
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 // API Routes

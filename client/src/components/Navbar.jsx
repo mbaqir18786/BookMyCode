@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Bell, Menu, X, LogOut, ChevronDown } from 'lucide-react';
+import API_BASE_URL from '../config/api';
 
 export default function Navbar() {
   const { currentUser, role, logout, notifications, fetchNotifications, isAuthenticated } = useAuth();
@@ -33,7 +34,7 @@ export default function Navbar() {
 
   const markRead = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/notifications/${id}/read`, { method: 'PUT' });
+      await fetch(`${API_BASE_URL}/api/notifications/${id}/read`, { method: 'PUT' });
       fetchNotifications();
     } catch (e) {
       console.error(e);

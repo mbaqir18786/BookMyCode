@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCurrentUser } from '../context/CurrentUserContext';
 import { Tractor, ShoppingBag, PlusCircle, ShieldCheck, AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
+import API_BASE_URL from '../config/api';
 
 export default function SellerDashboard() {
   const { currentUser } = useCurrentUser();
@@ -53,7 +54,7 @@ export default function SellerDashboard() {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/sellers/profile?user_id=${currentUser.id}`);
+      const res = await fetch(`${API_BASE_URL}/api/sellers/profile?user_id=${currentUser.id}`);
       if (res.ok) {
         const data = await res.json();
         setSellerProfile(data);
@@ -73,7 +74,7 @@ export default function SellerDashboard() {
   const fetchMyListings = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:5000/api/sellers/my-listings?seller_id=${sellerProfile?.id || 'seller_1'}`);
+      const res = await fetch(`${API_BASE_URL}/api/sellers/my-listings?seller_id=${sellerProfile?.id || 'seller_1'}`);
       if (res.ok) {
         const data = await res.json();
         setMyListings(data);
@@ -88,7 +89,7 @@ export default function SellerDashboard() {
   const handleKycSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/sellers/kyc', {
+      const res = await fetch(`${API_BASE_URL}/api/sellers/kyc`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...kycForm, user_id: currentUser.id })
@@ -105,7 +106,7 @@ export default function SellerDashboard() {
   const handleAddMachine = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/sellers/machines', {
+      const res = await fetch(`${API_BASE_URL}/api/sellers/machines`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...machineForm, seller_id: sellerProfile?.id || 'seller_1' })
@@ -122,7 +123,7 @@ export default function SellerDashboard() {
   const handleAddBuyerListing = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/sellers/buyer-listings', {
+      const res = await fetch(`${API_BASE_URL}/api/sellers/buyer-listings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...buyerForm, seller_id: sellerProfile?.id || 'seller_2' })

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useCurrentUser } from '../context/CurrentUserContext';
 import { Tractor, MapPin, Calendar, CheckCircle2, ShieldCheck, Filter } from 'lucide-react';
+import API_BASE_URL from '../config/api';
 
 export default function MachinerySearch() {
   const [searchParams] = useSearchParams();
@@ -30,7 +31,7 @@ export default function MachinerySearch() {
 
   const fetchFarms = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/farms?user_id=${currentUser.id}`);
+      const res = await fetch(`${API_BASE_URL}/api/farms?user_id=${currentUser.id}`);
       if (res.ok) {
         const data = await res.json();
         setFarms(data);
@@ -44,7 +45,7 @@ export default function MachinerySearch() {
   const fetchMachinery = async () => {
     try {
       setLoading(true);
-      const url = `http://localhost:5000/api/marketplace/machinery?machine_type=${machineType}&max_distance_km=${maxDistance}`;
+      const url = `${API_BASE_URL}/api/marketplace/machinery?machine_type=${machineType}&max_distance_km=${maxDistance}`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -65,7 +66,7 @@ export default function MachinerySearch() {
       setSubmitting(true);
       const totalPrice = Math.round(Number(acresToCover) * selectedMachine.rate_per_acre);
 
-      const res = await fetch('http://localhost:5000/api/marketplace/bookings', {
+      const res = await fetch(`${API_BASE_URL}/api/marketplace/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
