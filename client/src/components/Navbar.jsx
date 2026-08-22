@@ -49,7 +49,8 @@ export default function Navbar() {
       { path: '/farmer/buyers', label: '🛍️ Sell Stubble' }
     ],
     seller: [
-      { path: '/seller', label: '🚜 Seller Dashboard' }
+      { path: '/seller', label: '🚜 Seller Dashboard' },
+      { path: '/seller/verify-kyc', label: '🛡️ Verify KYC / KYB' }
     ],
     government: [
       { path: '/admin', label: '🏛️ Fire Hotspots & Map' }

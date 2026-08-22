@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useCurrentUser } from '../context/CurrentUserContext';
-import { Tractor, ShoppingBag, PlusCircle, ShieldCheck, AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
+import { Tractor, ShoppingBag, PlusCircle, ShieldCheck, AlertCircle, FileText, CheckCircle2, FileCheck } from 'lucide-react';
 import API_BASE_URL from '../config/api';
 
 export default function SellerDashboard() {
@@ -194,9 +195,15 @@ export default function SellerDashboard() {
             </div>
           )}
 
-          <button onClick={() => setShowKycForm(!showKycForm)} className="neo-btn bg-white text-black text-xs">
-            {showKycForm ? 'Close Form' : 'Update KYC Docs'}
-          </button>
+          <div className="flex items-center gap-2">
+            <Link to="/seller/verify-kyc" className="neo-btn bg-black text-yellow-400 text-xs font-black flex items-center gap-1.5 shadow-md">
+              <ShieldCheck className="w-4 h-4" />
+              <span>Full Verification Portal</span>
+            </Link>
+            <button onClick={() => setShowKycForm(!showKycForm)} className="neo-btn bg-white text-black text-xs">
+              {showKycForm ? 'Close Quick Form' : 'Quick Update'}
+            </button>
+          </div>
         </div>
       </div>
 

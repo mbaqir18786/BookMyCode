@@ -18,6 +18,7 @@ import BuyerSearch from './pages/BuyerSearch';
 import SellerDashboard from './pages/SellerDashboard';
 import GovDashboard from './pages/GovDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
+import KycVerificationPage from './pages/KycVerificationPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import OtpVerification from './pages/OtpVerification';
@@ -81,8 +82,9 @@ export default function App() {
               <Route path="/farmer/machinery" element={<RoleGuard allowedRoles={['farmer']}><MachinerySearch /></RoleGuard>} />
               <Route path="/farmer/buyers" element={<RoleGuard allowedRoles={['farmer']}><BuyerSearch /></RoleGuard>} />
 
-              {/* Role 2: Seller Pages */}
+              {/* Role 2: Seller & Buyer Pages */}
               <Route path="/seller" element={<RoleGuard allowedRoles={['seller']}><SellerDashboard /></RoleGuard>} />
+              <Route path="/seller/verify-kyc" element={<RoleGuard allowedRoles={['seller']}><KycVerificationPage /></RoleGuard>} />
 
               {/* Role 3: Government DAO Pages */}
               <Route path="/admin" element={<RoleGuard allowedRoles={['government']}><GovDashboard /></RoleGuard>} />
