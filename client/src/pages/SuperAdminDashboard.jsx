@@ -116,7 +116,7 @@ export default function SuperAdminDashboard() {
           <span className="neo-badge bg-[#0284C7] text-white">SUPER ADMIN VERIFICATION PANEL</span>
           <h1 className="text-3xl font-black uppercase text-[#0F172A] mt-1">Seller KYC Validation & Audit</h1>
           <p className="font-semibold text-sm text-gray-800">
-            Active Admin: <span className="font-bold underline">{currentUser.name}</span>
+            Active Admin: <span className="font-bold underline">{currentUser?.name || 'Super Admin'}</span>
           </p>
         </div>
 
@@ -148,11 +148,12 @@ export default function SuperAdminDashboard() {
             {sellers.map((s) => {
               const ai = getAIStatus(s);
               const isPending = s.kyc_status === 'pending';
+              const displayType = (s.seller_type || s.type || 'SELLER').replace(/_/g, ' ');
               return (
               <div key={s.id} className="neo-box p-6 bg-white flex flex-col justify-between space-y-4 border-4 border-black">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="neo-badge bg-yellow-200 text-black uppercase">{s.seller_type.replace('_', ' ')}</span>
+                    <span className="neo-badge bg-yellow-200 text-black uppercase">{displayType}</span>
                     <span className={`neo-badge font-bold text-white ${
                       s.kyc_status === 'approved' ? 'bg-green-700' :
                       s.kyc_status === 'rejected' ? 'bg-red-700' :
@@ -240,7 +241,7 @@ export default function SuperAdminDashboard() {
             <div key={s.id} className="p-4 border-2 border-black bg-gray-50 flex flex-wrap items-center justify-between text-xs font-bold gap-2">
               <div>
                 <span className="text-sm font-black uppercase">{s.business_name}</span>
-                <p className="text-gray-600">{s.seller_type} | Owner: {s.owner_name} ({s.phone}) | {s.address}</p>
+                <p className="text-gray-600">{(s.seller_type || s.type || 'seller').replace(/_/g, ' ')} | Owner: {s.owner_name} ({s.phone}) | {s.address}</p>
               </div>
 
               <div className="flex items-center space-x-3">
