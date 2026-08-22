@@ -279,87 +279,105 @@ export default function SellerDashboard() {
             {/* 1. Aadhaar */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-3 border border-black">
               <div>
-                <label className="text-xs font-bold uppercase text-gray-800">1. Aadhaar Card Number</label>
+                <label className="text-xs font-bold uppercase text-gray-800">1. Aadhaar Card Number *</label>
                 <input
                   type="text"
                   value={kycForm.aadhar_no}
-                  onChange={(e) => setKycForm({ ...kycForm, aadhar_no: e.target.value })}
+                  onChange={(e) => setKycForm({ ...kycForm, aadhar_no: e.target.value.replace(/\D/g, '').slice(0, 12) })}
                   placeholder="12-digit Aadhaar Number"
                   className="neo-input mt-1 text-xs font-mono"
                   required
                 />
               </div>
-              <div>
-                <label className="text-xs font-bold uppercase text-gray-800">Aadhaar Document URL / File</label>
+              <div className="space-y-1">
+                <label className="text-xs font-bold uppercase text-gray-800">Upload Aadhaar Document (PDF/Image)</label>
                 <input
-                  type="url"
-                  value={kycForm.aadhar_doc_url}
-                  onChange={(e) => setKycForm({ ...kycForm, aadhar_doc_url: e.target.value })}
-                  placeholder="https://.../aadhar.pdf or image URL"
-                  className="neo-input mt-1 text-xs"
-                  required
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => setKycForm(prev => ({ ...prev, aadhar_doc_url: ev.target.result }));
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:border file:border-black file:text-xs file:font-bold file:bg-yellow-100"
                 />
+                {kycForm.aadhar_doc_url && <p className="text-[10px] text-green-700 font-bold">✓ Attached</p>}
               </div>
             </div>
 
             {/* 2. PAN */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-3 border border-black">
               <div>
-                <label className="text-xs font-bold uppercase text-gray-800">2. Business / Personal PAN</label>
+                <label className="text-xs font-bold uppercase text-gray-800">2. Business / Personal PAN *</label>
                 <input
                   type="text"
                   value={kycForm.pan_no}
-                  onChange={(e) => setKycForm({ ...kycForm, pan_no: e.target.value.toUpperCase() })}
+                  onChange={(e) => setKycForm({ ...kycForm, pan_no: e.target.value.toUpperCase().slice(0, 10) })}
                   placeholder="e.g., ABCDE1234F"
                   maxLength={10}
                   className="neo-input mt-1 text-xs font-mono uppercase"
                   required
                 />
               </div>
-              <div>
-                <label className="text-xs font-bold uppercase text-gray-800">PAN Card Document URL / File</label>
+              <div className="space-y-1">
+                <label className="text-xs font-bold uppercase text-gray-800">Upload PAN Document (PDF/Image)</label>
                 <input
-                  type="url"
-                  value={kycForm.pan_doc_url}
-                  onChange={(e) => setKycForm({ ...kycForm, pan_doc_url: e.target.value })}
-                  placeholder="https://.../pan-card.pdf or image URL"
-                  className="neo-input mt-1 text-xs"
-                  required
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => setKycForm(prev => ({ ...prev, pan_doc_url: ev.target.result }));
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:border file:border-black file:text-xs file:font-bold file:bg-yellow-100"
                 />
+                {kycForm.pan_doc_url && <p className="text-[10px] text-green-700 font-bold">✓ Attached</p>}
               </div>
             </div>
 
             {/* 3. GST */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-3 border border-black">
               <div>
-                <label className="text-xs font-bold uppercase text-gray-800">3. GSTIN Registration Number</label>
+                <label className="text-xs font-bold uppercase text-gray-800">3. GSTIN Registration Number *</label>
                 <input
                   type="text"
                   value={kycForm.gst_no}
-                  onChange={(e) => setKycForm({ ...kycForm, gst_no: e.target.value.toUpperCase() })}
+                  onChange={(e) => setKycForm({ ...kycForm, gst_no: e.target.value.toUpperCase().slice(0, 15) })}
                   placeholder="e.g., 03AAAAA0000A1Z5"
                   maxLength={15}
                   className="neo-input mt-1 text-xs font-mono uppercase"
                   required
                 />
               </div>
-              <div>
-                <label className="text-xs font-bold uppercase text-gray-800">GST Certificate Document URL</label>
+              <div className="space-y-1">
+                <label className="text-xs font-bold uppercase text-gray-800">Upload GST Certificate (PDF/Image)</label>
                 <input
-                  type="url"
-                  value={kycForm.gst_doc_url}
-                  onChange={(e) => setKycForm({ ...kycForm, gst_doc_url: e.target.value })}
-                  placeholder="https://.../gst-certificate.pdf"
-                  className="neo-input mt-1 text-xs"
-                  required
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => setKycForm(prev => ({ ...prev, gst_doc_url: ev.target.result }));
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:border file:border-black file:text-xs file:font-bold file:bg-yellow-100"
                 />
+                {kycForm.gst_doc_url && <p className="text-[10px] text-green-700 font-bold">✓ Attached</p>}
               </div>
             </div>
 
             {/* 4. Udyam */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-3 border border-black">
               <div>
-                <label className="text-xs font-bold uppercase text-gray-800">4. Udyam Registration Number</label>
+                <label className="text-xs font-bold uppercase text-gray-800">4. Udyam Registration Number *</label>
                 <input
                   type="text"
                   value={kycForm.udyam_no}
@@ -369,16 +387,22 @@ export default function SellerDashboard() {
                   required
                 />
               </div>
-              <div>
-                <label className="text-xs font-bold uppercase text-gray-800">Udyam Certificate Document URL</label>
+              <div className="space-y-1">
+                <label className="text-xs font-bold uppercase text-gray-800">Upload Udyam Certificate (PDF/Image)</label>
                 <input
-                  type="url"
-                  value={kycForm.udyam_doc_url}
-                  onChange={(e) => setKycForm({ ...kycForm, udyam_doc_url: e.target.value })}
-                  placeholder="https://.../udyam-cert.pdf"
-                  className="neo-input mt-1 text-xs"
-                  required
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => setKycForm(prev => ({ ...prev, udyam_doc_url: ev.target.result }));
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:border file:border-black file:text-xs file:font-bold file:bg-yellow-100"
                 />
+                {kycForm.udyam_doc_url && <p className="text-[10px] text-green-700 font-bold">✓ Attached</p>}
               </div>
             </div>
           </div>
