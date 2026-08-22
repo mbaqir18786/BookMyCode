@@ -212,30 +212,19 @@ router.post('/login', async (req, res) => {
           OR LOWER(email) = LOWER($1)
           OR phone = $1
           OR ($2 <> '' AND (phone = $2 OR phone = '+91' || $2 OR phone = '+' || $2 OR REPLACE(REPLACE(phone, '+91', ''), '+', '') = $2))
-          OR (LOWER($1) = 'farmer' AND role = 'farmer')
-          OR (LOWER($1) = 'seller' AND role = 'seller')
-          OR (LOWER($1) = 'superadmin' AND role = 'super_admin')
-          OR (LOWER($1) = 'govadmin' AND role = 'government')
-       ORDER BY CASE 
-         WHEN LOWER(username) = LOWER($1) THEN 1 
-         WHEN LOWER(email) = LOWER($1) THEN 2 
-         WHEN phone = $1 THEN 3 
-         ELSE 4 
-       END
        LIMIT 1`,
       [normalizedUser, cleanDigits]
     );
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     const isMatch = (user.password_hash && await bcrypt.compare(password, user.password_hash).catch(() => false))
-      || password === user.password_hash
-      || ['admin123', 'password', 'password123', 'farmer123', '12345678', '123456', 'admin', 'farmer'].includes(password);
+      || password === user.password_hash;
 
     if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     return res.json({ token: createToken({ sub: user.id, role: user.role }, 'access', '7d'), user: publicUser(user) });
