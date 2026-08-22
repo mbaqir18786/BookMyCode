@@ -1,34 +1,33 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Bell, Menu, X, LogOut, ChevronDown } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { Bell, LogOut, ChevronDown, Globe } from 'lucide-react';
 import API_BASE_URL from '../config/api';
 
 export default function Navbar() {
   const { currentUser, role, logout, notifications, fetchNotifications, isAuthenticated } = useAuth();
+  const { lang, changeLanguage, farmerLanguages } = useLanguage();
   const location = useLocation();
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
 
   const profileRef = useRef(null);
   const notifRef = useRef(null);
+  const langRef = useRef(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(e) {
       if (profileRef.current && !profileRef.current.contains(e.target)) setShowProfileMenu(false);
       if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifications(false);
+      if (langRef.current && !langRef.current.contains(e.target)) setShowLangMenu(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  // Close mobile menu on route change
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [location.pathname]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
@@ -135,6 +134,55 @@ export default function Navbar() {
 
         {/* Right side actions */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Language Switcher Dropdown */}
+          <div className="relative" ref={langRef}>
+            <button
+              onClick={() => {
+                setShowLangMenu(!showLangMenu);
+                setShowNotifications(false);
+                setShowProfileMenu(false);
+              }}
+              className="neo-btn bg-white px-2.5 py-1.5 flex items-center gap-1 text-xs font-black"
+              title="Change Language"
+            >
+              <Globe className="w-4 h-4 text-[#15803D]" />
+              <span className="hidden sm:inline">
+                {farmerLanguages.find(l => l.code === lang)?.flag} {farmerLanguages.find(l => l.code === lang)?.name || 'EN'}
+              </span>
+              <ChevronDown className="w-3 h-3 text-gray-700" />
+            </button>
+
+            {showLangMenu && (
+              <div className="absolute right-0 mt-2 w-48 neo-box-static bg-white z-50 shadow-[6px_6px_0px_#000] p-1 max-h-72 overflow-y-auto">
+                <div className="px-3 py-1.5 text-[10px] font-black uppercase text-gray-500 border-b border-gray-200 mb-1">
+                  Select Language
+                </div>
+                {farmerLanguages.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => {
+                      changeLanguage(l.code, role);
+                      setShowLangMenu(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs font-bold flex items-center justify-between border-2 transition-colors my-0.5 ${
+                      lang === l.code
+                        ? 'bg-[#15803D] text-white border-[#0F172A]'
+                        : 'bg-white text-[#0F172A] border-transparent hover:bg-yellow-100 hover:border-[#0F172A]'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span>{l.flag}</span>
+                      <span>{l.native}</span>
+                    </span>
+                    <span className={`text-[10px] ${lang === l.code ? 'text-green-100' : 'text-gray-500'}`}>
+                      {l.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Notifications Bell */}
           <div className="relative" ref={notifRef}>
             <button
@@ -239,46 +287,8 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Hamburger */}
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden neo-btn bg-white p-2">
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
         </div>
       </div>
-
-      {/* Mobile Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-yellow-50 border-t-4 border-black shadow-lg">
-          <div className="px-4 py-2 text-[10px] font-black uppercase text-gray-500 border-b border-gray-200">
-            Navigation — {role?.toUpperCase()}
-          </div>
-          <nav className="p-3 space-y-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block w-full text-left font-bold text-sm p-3 border-2 border-black ${
-                  location.pathname === item.path ? 'bg-[#15803D] text-white' : 'bg-white text-black'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="px-3 pb-3">
-            <button
-              onClick={() => {
-                logout();
-                setMobileMenuOpen(false);
-              }}
-              className="w-full neo-btn bg-red-100 text-red-700 text-sm py-2.5 flex items-center justify-center gap-2"
-            >
-              <LogOut className="w-4 h-4" /> Sign Out
-            </button>
-          </div>
-        </div>
-      )}
     </header>
   );
 }
