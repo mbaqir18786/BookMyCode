@@ -1,0 +1,77 @@
+[
+  {
+    "id": "certificate_of_incorporation",
+    "name": "Certificate of Incorporation / Business Registration",
+    "required": true
+  },
+  {
+    "id": "business_pan",
+    "name": "Business PAN",
+    "required": true
+  },
+  {
+    "id": "gst_certificate",
+    "name": "GST Registration Certificate",
+    "required": true
+  },
+  {
+    "id": "mca_roc",
+    "name": "MCA / ROC Details",
+    "required": true
+  },
+  {
+    "id": "udyam",
+    "name": "Udyam Registration Certificate",
+    "required": true
+  },
+  {
+    "id": "business_address",
+    "name": "Business Address Proof",
+    "required": true
+  },
+  {
+    "id": "utility_bill",
+    "name": "Utility Bill",
+    "required": true
+  },
+  {
+    "id": "rent_lease",
+    "name": "Rent / Lease Agreement",
+    "required": true
+  },
+  {
+    "id": "owner_identity",
+    "name": "Director / Partner / Proprietor Identity Proof",
+    "required": true
+  },
+  {
+    "id": "signatory_identity",
+    "name": "Authorized Signatory Identity Proof",
+    "required": true
+  },
+  {
+    "id": "bank_statement",
+    "name": "Bank Statement",
+    "required": true
+  },
+  {
+    "id": "cancelled_cheque",
+    "name": "Cancelled Cheque",
+    "required": true
+  },
+  {
+    "id": "authorization",
+    "name": "Board Resolution / Authorization Letter",
+    "required": true
+  },
+  {
+    "id": "ownership_ubo",
+    "name": "Ownership / UBO Document",
+    "required": true
+  },
+  {
+    "id": "industry_license",
+    "name": "Industry / Regulatory License",
+    "required": false
+  }
+]

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const http = require('http');
 const { query, get, run } = require('../db');
 
 // GET /api/sellers/profile?user_id=usr_seller_1
@@ -111,11 +112,60 @@ router.post('/kyc', async (req, res) => {
       );
     }
 
-    // Also update user kyc_status
+    // Also update user kyc_status to pending while AI runs
     await run("UPDATE users SET kyc_status = 'pending' WHERE id = $1", [user_id]);
 
-    const updatedSeller = await get('SELECT * FROM sellers WHERE user_id = $1', [user_id]);
-    res.json({ message: 'KYC documents submitted successfully and awaiting Super Admin verification.', seller: updatedSeller });
+    // ── AI Verification via KYB FastAPI Service ─────────────────────────────────
+    try {
+      console.log('[KYC] Calling KYB verify service for', user_id);
+      const postData = JSON.stringify({ business_name, seller_type, aadhar_no, pan_no, gst_no, udyam_no, address });
+      
+      const kybData = await new Promise((resolve, reject) => {
+        const reqPost = http.request({
+          hostname: '127.0.0.1',
+          port: 8001,
+          path: '/verify-kyc-numbers',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(postData)
+          }
+        }, (resPost) => {
+          let data = '';
+          resPost.on('data', chunk => { data += chunk; });
+          resPost.on('end', () => {
+            try {
+              if (resPost.statusCode >= 200 && resPost.statusCode < 300) {
+                resolve(JSON.parse(data));
+              } else {
+                reject(new Error(`KYB returned status ${resPost.statusCode}: ${data}`));
+              }
+            } catch (err) {
+              reject(err);
+            }
+          });
+        });
+        reqPost.on('error', reject);
+        reqPost.write(postData);
+        reqPost.end();
+      });
+
+      const newStatus = kybData.verdict === 'APPROVED' ? 'approved' : 'rejected';
+
+      await run(
+        `UPDATE sellers SET kyc_ai_result = $1, kyc_status = $2 WHERE user_id = $3`,
+        [JSON.stringify(kybData), newStatus, user_id]
+      );
+      await run(`UPDATE users SET kyc_status = $1 WHERE id = $2`, [newStatus, user_id]);
+
+      console.log(`[KYC] KYB verdict for ${user_id}: ${kybData.verdict} — ${kybData.reason}`);
+    } catch (aiErr) {
+      console.error('[KYC] KYB service error, keeping status pending:', aiErr.message);
+    }
+    // ───────────────────────────────────────────────────────────────────────────
+
+    const finalSeller = await get('SELECT * FROM sellers WHERE user_id = $1', [user_id]);
+    res.json({ message: 'KYC submitted. AI verification complete.', seller: finalSeller });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

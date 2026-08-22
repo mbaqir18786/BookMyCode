@@ -27,8 +27,9 @@ export default function Signup() {
     event.preventDefault();
     setError('');
     try {
-      await authRequest('/api/auth/request-otp', { method: 'POST', body: JSON.stringify({ phone }) });
-      navigate('/verify-otp', { state: { phone, purpose: 'signup' } });
+      const data = await authRequest('/api/auth/request-otp', { method: 'POST', body: JSON.stringify({ phone }) });
+      // Pass the OTP returned by server (demo mode) so the verify page can show it
+      navigate('/verify-otp', { state: { phone, purpose: 'signup', demoOtp: data.otp } });
     } catch (requestError) {
       setError(requestError.message);
     }

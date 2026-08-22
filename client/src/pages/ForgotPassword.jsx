@@ -15,8 +15,8 @@ export default function ForgotPassword() {
     setSubmitting(true);
     setError('');
     try {
-      await authRequest('/api/auth/request-password-reset', { method: 'POST', body: JSON.stringify({ phone }) });
-      navigate('/verify-otp', { state: { phone, purpose: 'password_reset' } });
+      const data = await authRequest('/api/auth/request-password-reset', { method: 'POST', body: JSON.stringify({ phone }) });
+      navigate('/verify-otp', { state: { phone, purpose: 'password_reset', demoOtp: data.otp } });
     } catch (submitError) {
       setError(submitError.message);
     } finally {

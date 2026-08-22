@@ -112,11 +112,8 @@ router.post('/request-otp', async (req, res) => {
     if (existingUser) return res.status(409).json({ error: 'An account already exists for this phone number' });
 
     const code = await createOtp(phone, 'signup');
-    const response = { message: 'OTP sent successfully', phone };
-    if (process.env.OTP_SENDER === 'development' && process.env.NODE_ENV !== 'production') {
-      response.development_otp = code;
-    }
-    return res.json(response);
+    // Always return OTP in response (demo mode — no SMS service configured)
+    return res.json({ message: 'OTP sent successfully', phone, otp: code });
   } catch (error) {
     console.error('Signup OTP error:', error.message);
     return res.status(500).json({ error: 'Unable to send signup OTP' });
@@ -230,11 +227,8 @@ router.post('/request-password-reset', async (req, res) => {
     if (!user) return res.status(404).json({ error: 'No account found for this phone number' });
 
     const code = await createOtp(phone, 'password_reset');
-    const response = { message: 'Password reset OTP sent successfully', phone };
-    if (process.env.OTP_SENDER === 'development' && process.env.NODE_ENV !== 'production') {
-      response.development_otp = code;
-    }
-    return res.json(response);
+    // Always return OTP in response (demo mode — no SMS service configured)
+    return res.json({ message: 'Password reset OTP sent successfully', phone, otp: code });
   } catch (error) {
     console.error('Password reset OTP error:', error.message);
     return res.status(500).json({ error: 'Unable to send password reset OTP' });

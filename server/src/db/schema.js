@@ -68,8 +68,19 @@ CREATE TABLE IF NOT EXISTS sellers (
   kyc_status TEXT DEFAULT 'pending'
     CHECK(kyc_status IN ('pending', 'approved', 'rejected')),
   kyc_document_url TEXT,
+  kyc_ai_result JSONB,
   rating REAL DEFAULT 5.0,
   is_active INTEGER DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- BUYERS TABLE
+CREATE TABLE IF NOT EXISTS buyers (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  kyc_status TEXT DEFAULT 'pending' CHECK(kyc_status IN ('pending', 'approved', 'rejected')),
+  kyc_ai_result JSONB,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );

@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import RoleGuard from './components/RoleGuard';
 import ChatbotWidget from './components/ChatbotWidget';
+import KycVerify from './pages/KycVerify';
 
 import LandingPage from './pages/LandingPage';
 import FarmerDashboard from './pages/FarmerDashboard';
@@ -84,6 +85,7 @@ export default function App() {
 
               {/* Role 2: Seller & Buyer Pages */}
               <Route path="/seller" element={<RoleGuard allowedRoles={['seller']}><SellerDashboard /></RoleGuard>} />
+            <Route path="/seller/ai-verify" element={<RoleGuard allowedRoles={['seller']}><KycVerify /></RoleGuard>} />
               <Route path="/seller/verify-kyc" element={<RoleGuard allowedRoles={['seller']}><KycVerificationPage /></RoleGuard>} />
 
               {/* Role 3: Government DAO Pages */}

@@ -101,7 +101,16 @@ export default function SellerDashboard() {
       const res = await fetch(`${API_BASE_URL}/api/sellers/kyc`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...kycForm, user_id: currentUser.id })
+        body: JSON.stringify({
+          ...kycForm,
+          user_id: currentUser.id,
+          kyc_documents: [
+            ...(kycForm.aadhar_doc_url ? [{ filename: 'aadhar.pdf', content: kycForm.aadhar_doc_url.split(',')[1] }] : []),
+            ...(kycForm.pan_doc_url ? [{ filename: 'pan.pdf', content: kycForm.pan_doc_url.split(',')[1] }] : []),
+            ...(kycForm.gst_doc_url ? [{ filename: 'gst.pdf', content: kycForm.gst_doc_url.split(',')[1] }] : []),
+            ...(kycForm.udyam_doc_url ? [{ filename: 'udyam.pdf', content: kycForm.udyam_doc_url.split(',')[1] }] : []),
+          ]
+        })
       });
       if (res.ok) {
         setShowKycForm(false);

@@ -1,0 +1,9 @@
+fastapi>=0.120
+uvicorn[standard]>=0.38
+python-multipart>=0.0.20
+PyMuPDF>=1.26
+Pillow>=11.0
+pytesseract>=0.3.13
+python-docx>=1.1
+httpx>=0.28
+python-dotenv>=1.0

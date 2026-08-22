@@ -5,6 +5,7 @@ require('dotenv').config();
 const authRouter = require('./routes/auth');
 const farmsRouter = require('./routes/farms');
 const sellersRouter = require('./routes/sellers');
+const buyersRouter = require('./routes/buyers');
 const marketplaceRouter = require('./routes/marketplace');
 const recommendationsRouter = require('./routes/recommendations');
 const incidentsRouter = require('./routes/incidents');
@@ -42,6 +43,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/farms', farmsRouter);
 app.use('/api/sellers', sellersRouter);
 app.use('/api/marketplace', marketplaceRouter);
+app.use('/api/buyers', buyersRouter);
 app.use('/api/recommendations', recommendationsRouter);
 app.use('/api/farms', recommendationsRouter); // Also mount under /api/farms for /api/farms/:id/recommendation
 app.use('/api/incidents', incidentsRouter);

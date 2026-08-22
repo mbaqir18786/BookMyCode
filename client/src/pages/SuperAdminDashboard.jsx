@@ -8,6 +8,33 @@ export default function SuperAdminDashboard() {
 
   const [sellers, setSellers] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
+
+  // Helper to evaluate AI verification result from KYB service
+  const getAIStatus = (seller) => {
+    if (!seller.kyc_ai_result) return { label: 'AI PENDING', color: '#9ca3af', verdict: null, reason: 'AI has not run yet.', checks: {}, confidence: 0 };
+    try {
+      const r = typeof seller.kyc_ai_result === 'string' ? JSON.parse(seller.kyc_ai_result) : seller.kyc_ai_result;
+      const isApproved = r.verdict === 'APPROVED';
+      // Convert checks array [{name, passed, detail}] to {name: 'VALID'|'INVALID'} map
+      const checksMap = {};
+      if (Array.isArray(r.checks)) {
+        r.checks.forEach(c => {
+          checksMap[c.name] = c.passed ? 'VALID' : 'INVALID';
+        });
+      }
+      return {
+        label: isApproved ? '✅ AI APPROVED' : '❌ AI REJECTED',
+        color: isApproved ? '#15803d' : '#b91c1c',
+        verdict: r.verdict,
+        reason: r.reason || '',
+        checks: checksMap,
+        checkDetails: r.checks || [],
+        confidence: r.confidence || 0
+      };
+    } catch (e) {
+      return { label: '⚠ AI ERROR', color: '#d97706', verdict: null, reason: 'Could not parse AI result.', checks: {}, checkDetails: [], confidence: 0 };
+    }
+  };
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
 
@@ -82,6 +109,7 @@ export default function SuperAdminDashboard() {
 
   return (
     <div className="space-y-8 pb-16">
+      {/* AI status badge helper is used inside the pending seller cards */}
       {/* Super Admin Banner */}
       <div className="neo-box p-6 bg-[#E0F2FE] flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -103,7 +131,7 @@ export default function SuperAdminDashboard() {
         <div className="flex items-center justify-between border-b-4 border-black pb-2">
           <h2 className="text-2xl font-black uppercase flex items-center space-x-2">
             <AlertCircle className="w-6 h-6 text-yellow-600" />
-            <span>Pending Seller KYC Applications ({pendingSellers.length})</span>
+            <span>Seller KYC Applications ({sellers.length})</span>
           </h2>
           <span className="neo-badge bg-yellow-300 text-black">REAL-TIME DB STATE ENGINE</span>
         </div>
@@ -117,12 +145,21 @@ export default function SuperAdminDashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {pendingSellers.map((s) => (
+            {sellers.map((s) => {
+              const ai = getAIStatus(s);
+              const isPending = s.kyc_status === 'pending';
+              return (
               <div key={s.id} className="neo-box p-6 bg-white flex flex-col justify-between space-y-4 border-4 border-black">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="neo-badge bg-yellow-200 text-black uppercase">{s.seller_type.replace('_', ' ')}</span>
-                    <span className="neo-badge bg-yellow-400 text-black font-bold">PENDING APPROVAL</span>
+                    <span className={`neo-badge font-bold text-white ${
+                      s.kyc_status === 'approved' ? 'bg-green-700' :
+                      s.kyc_status === 'rejected' ? 'bg-red-700' :
+                      'bg-yellow-500 text-black'
+                    }`}>
+                      {s.kyc_status === 'approved' ? '✅ APPROVED' : s.kyc_status === 'rejected' ? '❌ REJECTED' : '⏳ PENDING'}
+                    </span>
                   </div>
 
                   <div>
@@ -135,58 +172,59 @@ export default function SuperAdminDashboard() {
                     <p>Submitted: <strong>{new Date(s.created_at).toLocaleDateString()}</strong></p>
 
                     <div className="border-t border-gray-300 pt-2 space-y-1.5 font-mono text-[11px]">
-                      <div className="flex items-center justify-between bg-white p-1.5 border border-gray-300">
-                        <span>🪪 Aadhaar: <strong>{s.aadhar_no || 'Not Provided'}</strong></span>
-                        {s.aadhar_doc_url ? (
-                          <a href={s.aadhar_doc_url} target="_blank" rel="noreferrer" className="text-blue-700 underline font-bold">View Doc</a>
-                        ) : <span className="text-gray-400">No file</span>}
-                      </div>
-
-                      <div className="flex items-center justify-between bg-white p-1.5 border border-gray-300">
-                        <span>📄 PAN: <strong>{s.pan_no || 'Not Provided'}</strong></span>
-                        {s.pan_doc_url ? (
-                          <a href={s.pan_doc_url} target="_blank" rel="noreferrer" className="text-blue-700 underline font-bold">View Doc</a>
-                        ) : <span className="text-gray-400">No file</span>}
-                      </div>
-
-                      <div className="flex items-center justify-between bg-white p-1.5 border border-gray-300">
-                        <span>🏢 GSTIN: <strong>{s.gst_no || 'Not Provided'}</strong></span>
-                        {s.gst_doc_url ? (
-                          <a href={s.gst_doc_url} target="_blank" rel="noreferrer" className="text-blue-700 underline font-bold">View Doc</a>
-                        ) : <span className="text-gray-400">No file</span>}
-                      </div>
-
-                      <div className="flex items-center justify-between bg-white p-1.5 border border-gray-300">
-                        <span>📜 Udyam: <strong>{s.udyam_no || 'Not Provided'}</strong></span>
-                        {s.udyam_doc_url ? (
-                          <a href={s.udyam_doc_url} target="_blank" rel="noreferrer" className="text-blue-700 underline font-bold">View Doc</a>
-                        ) : <span className="text-gray-400">No file</span>}
-                      </div>
+                      {[['🪪','Aadhaar','aadhar_no','aadhar_doc_url','aadhaar'],['📄','PAN','pan_no','pan_doc_url','pan'],['🏢','GSTIN','gst_no','gst_doc_url','gstin'],['📜','Udyam','udyam_no','udyam_doc_url','udyam']].map(([icon, label, numKey, urlKey, checkKey]) => (
+                        <div key={label} className="flex items-center justify-between bg-white p-1.5 border border-gray-300">
+                          <span>{icon} {label}: <strong>{s[numKey] || 'Not Provided'}</strong></span>
+                          <div className="flex items-center gap-2">
+                            {ai.checks[checkKey] && (
+                              <span style={{ color: ai.checks[checkKey] === 'VALID' ? '#15803d' : ai.checks[checkKey] === 'INVALID' ? '#b91c1c' : '#6b7280', fontWeight: 800 }}>
+                                {ai.checks[checkKey] === 'VALID' ? '✓' : ai.checks[checkKey] === 'INVALID' ? '✗' : '–'}
+                              </span>
+                            )}
+                            {s[urlKey] ? (
+                              <a href={s[urlKey]} target="_blank" rel="noreferrer" className="text-blue-700 underline font-bold">View Doc</a>
+                            ) : <span className="text-gray-400">No file</span>}
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                  </div>
+
+                  {/* AI Verdict Card */}
+                  <div style={{ background: ai.verdict ? (ai.verdict === 'APPROVED' ? '#f0fdf4' : '#fef2f2') : '#f9fafb', border: `2px solid ${ai.color}`, borderRadius: 4, padding: '10px 14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: 900, fontSize: 12, color: ai.color, textTransform: 'uppercase', letterSpacing: 1 }}>{ai.label}</span>
+                      {ai.confidence > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280' }}>Confidence: {ai.confidence}%</span>}
+                    </div>
+                    {ai.reason && <p style={{ fontSize: 11, color: '#374151', marginTop: 4, fontWeight: 600 }}>{ai.reason}</p>}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-2 border-t-2 border-black">
-                  <button
-                    onClick={() => handleApprove(s.id)}
-                    disabled={processingId === s.id}
-                    className="neo-btn neo-btn-primary text-xs py-2.5 flex items-center justify-center space-x-1"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>APPROVE KYC</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleReject(s.id)}
-                    disabled={processingId === s.id}
-                    className="neo-btn neo-btn-danger text-xs py-2.5 flex items-center justify-center space-x-1"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    <span>REJECT</span>
-                  </button>
+                {/* Manual Override — Super Admin always has final say */}
+                <div className="space-y-2 pt-2 border-t-2 border-black">
+                  <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Super Admin Override</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => handleApprove(s.id)}
+                      disabled={processingId === s.id}
+                      className="neo-btn neo-btn-primary text-xs py-2.5 flex items-center justify-center space-x-1"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>APPROVE KYC</span>
+                    </button>
+                    <button
+                      onClick={() => handleReject(s.id)}
+                      disabled={processingId === s.id}
+                      className="neo-btn neo-btn-danger text-xs py-2.5 flex items-center justify-center space-x-1"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      <span>REJECT</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>
