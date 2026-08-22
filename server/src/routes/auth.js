@@ -201,12 +201,31 @@ router.post('/login', async (req, res) => {
   try {
     const identifier = String(req.body.identifier || '').trim();
     const password = String(req.body.password || '');
-    if (!identifier || !password) return res.status(400).json({ error: 'Username or phone and password are required' });
+    if (!identifier || !password) return res.status(400).json({ error: 'Username, email, or phone and password are required' });
+
+    const normalizedUser = normalizeUsername(identifier);
+    const cleanDigits = identifier.replace(/\D/g, '');
 
     const user = await get(
-      'SELECT * FROM users WHERE LOWER(username) = LOWER($1) OR phone = $2',
-      [normalizeUsername(identifier), normalizePhone(identifier)]
+      `SELECT * FROM users 
+       WHERE LOWER(username) = LOWER($1) 
+          OR LOWER(email) = LOWER($1)
+          OR phone = $1
+          OR ($2 <> '' AND (phone = $2 OR phone = '+91' || $2 OR phone = '+' || $2 OR REPLACE(REPLACE(phone, '+91', ''), '+', '') = $2))
+          OR (LOWER($1) = 'farmer' AND role = 'farmer')
+          OR (LOWER($1) = 'seller' AND role = 'seller')
+          OR (LOWER($1) = 'superadmin' AND role = 'super_admin')
+          OR (LOWER($1) = 'govadmin' AND role = 'government')
+       ORDER BY CASE 
+         WHEN LOWER(username) = LOWER($1) THEN 1 
+         WHEN LOWER(email) = LOWER($1) THEN 2 
+         WHEN phone = $1 THEN 3 
+         ELSE 4 
+       END
+       LIMIT 1`,
+      [normalizedUser, cleanDigits]
     );
+
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
