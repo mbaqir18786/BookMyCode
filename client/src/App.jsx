@@ -77,18 +77,36 @@ export default function App() {
 
                 {/* Role 1: Farmer Pages */}
                 <Route path="/farmer" element={<RoleGuard allowedRoles={['farmer']}><FarmerDashboard /></RoleGuard>} />
+                <Route path="/farmer/dashboard" element={<Navigate to="/farmer" replace />} />
+                <Route path="/farmer/plots" element={<Navigate to="/farmer/farms" replace />} />
                 <Route path="/farmer/farms" element={<RoleGuard allowedRoles={['farmer']}><FarmsList /></RoleGuard>} />
                 <Route path="/farmer/farms/new" element={<RoleGuard allowedRoles={['farmer']}><FarmForm /></RoleGuard>} />
                 <Route path="/farmer/farms/:id" element={<RoleGuard allowedRoles={['farmer']}><FarmDetail /></RoleGuard>} />
                 <Route path="/farmer/farms/:id/edit" element={<RoleGuard allowedRoles={['farmer']}><FarmForm /></RoleGuard>} />
                 <Route path="/farmer/farms/:id/recommendation" element={<RoleGuard allowedRoles={['farmer']}><RecommendationPage /></RoleGuard>} />
+                <Route path="/farmer/recommendations" element={<Navigate to="/farmer/farms" replace />} />
                 <Route path="/farmer/machinery" element={<RoleGuard allowedRoles={['farmer']}><MachinerySearch /></RoleGuard>} />
+                <Route path="/farmer/marketplace" element={<Navigate to="/farmer/machinery" replace />} />
                 <Route path="/farmer/buyers" element={<RoleGuard allowedRoles={['farmer']}><BuyerSearch /></RoleGuard>} />
+                <Route path="/farmer/sell-stubble" element={<Navigate to="/farmer/buyers" replace />} />
+                <Route path="/farmer/schemes" element={<Navigate to="/farmer" replace />} />
 
                 {/* Role 2: Seller & Buyer Pages */}
                 <Route path="/seller" element={<RoleGuard allowedRoles={['seller']}><SellerDashboard /></RoleGuard>} />
-              <Route path="/seller/ai-verify" element={<RoleGuard allowedRoles={['seller']}><KycVerify /></RoleGuard>} />
+                <Route path="/seller/dashboard" element={<Navigate to="/seller" replace />} />
+                <Route path="/seller/ai-verify" element={<RoleGuard allowedRoles={['seller']}><KycVerify /></RoleGuard>} />
                 <Route path="/seller/verify-kyc" element={<RoleGuard allowedRoles={['seller']}><KycVerificationPage /></RoleGuard>} />
+                <Route path="/seller/equipment/new" element={<Navigate to="/seller" replace />} />
+                <Route path="/seller/buyer/new" element={<Navigate to="/seller" replace />} />
+                <Route path="/seller/listings" element={<Navigate to="/seller" replace />} />
+                <Route path="/seller/demands" element={<Navigate to="/seller" replace />} />
+
+                {/* Auth Aliases */}
+                <Route path="/signin" element={<Navigate to="/login" replace />} />
+                <Route path="/register" element={<Navigate to="/signup" replace />} />
+                <Route path="/register/farmer" element={<Navigate to="/signup" replace />} />
+                <Route path="/register/seller" element={<Navigate to="/signup" replace />} />
+                <Route path="/contact" element={<Navigate to="/" replace />} />
 
                 {/* Role 3: Government DAO Pages */}
                 <Route path="/admin" element={<RoleGuard allowedRoles={['government']}><GovDashboard /></RoleGuard>} />
