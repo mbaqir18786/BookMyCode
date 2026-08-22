@@ -208,12 +208,12 @@ router.get('/my-listings', async (req, res) => {
 // POST /api/sellers/machines - Add a machinery listing
 router.post('/machines', async (req, res) => {
   try {
-    const { seller_id, name, type, rate_per_acre, max_capacity_acres_per_day, latitude, longitude, address } = req.body;
+    const { seller_id, name, type, rate_per_acre, max_capacity_acres_per_day, latitude, longitude, address, description } = req.body;
     const machId = 'mach_' + Date.now();
     await run(
-      `INSERT INTO machines (id, seller_id, name, type, rate_per_acre, max_capacity_acres_per_day, latitude, longitude, address, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'available')`,
-      [machId, seller_id, name, type, Number(rate_per_acre), Number(max_capacity_acres_per_day || 10), Number(latitude), Number(longitude), address]
+      `INSERT INTO machinery_listings (id, seller_id, model_name, machine_type, daily_rate, hourly_rate, coverage_acres_per_day, available_units, latitude, longitude, location, description, current_availability_status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'available')`,
+      [machId, seller_id, name, type, Number(rate_per_acre), Math.round(Number(rate_per_acre)/8), Number(max_capacity_acres_per_day || 10), 1, Number(latitude || 30.9010), Number(longitude || 75.8573), address || 'Ludhiana, Punjab', description || `${name || 'Machinery'} available for crop residue management.`]
     );
 
     const machine = await get('SELECT * FROM machines WHERE id = $1', [machId]);
@@ -226,12 +226,12 @@ router.post('/machines', async (req, res) => {
 // POST /api/sellers/buyer-listings - Add a buyer listing
 router.post('/buyer-listings', async (req, res) => {
   try {
-    const { seller_id, crop_type, buying_purpose, price_per_ton, required_tons, min_quality, latitude, longitude, address } = req.body;
+    const { seller_id, crop_type, buying_purpose, price_per_ton, required_tons } = req.body;
     const listingId = 'buyer_list_' + Date.now();
     await run(
-      `INSERT INTO buyer_listings (id, seller_id, crop_type, buying_purpose, price_per_ton, required_tons, min_quality, latitude, longitude, address, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active')`,
-      [listingId, seller_id, crop_type || 'Paddy Straw', buying_purpose, Number(price_per_ton), Number(required_tons), min_quality || 'Standard Dry', Number(latitude), Number(longitude), address]
+      `INSERT INTO residue_buyer_offers (id, seller_id, residue_type, description, offered_price_per_ton, required_tons, min_order_tons, pickup_provided)
+      VALUES ($1, $2, $3, $4, $5, $6, 1, 1)`,
+      [listingId, seller_id, crop_type || 'Paddy Straw', buying_purpose || 'Biofuel Plant Supply', Number(price_per_ton), Number(required_tons || 100)]
     );
 
     const listing = await get('SELECT * FROM buyer_listings WHERE id = $1', [listingId]);

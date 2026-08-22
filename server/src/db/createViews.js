@@ -17,6 +17,8 @@ async function createViews() {
         current_availability_status AS status,
         description,
         location AS address,
+        COALESCE(latitude, 30.9010) AS latitude,
+        COALESCE(longitude, 75.8573) AS longitude,
         created_at
       FROM machinery_listings;
       
