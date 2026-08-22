@@ -43,53 +43,6 @@ export default function Login() {
           <Link to="/forgot-password">Forgot password?</Link>
           <Link to="/signup">Create account</Link>
         </div>
-
-        {/* Quick Demo Credentials */}
-        <div className="mt-4 border-t-2 border-black pt-4 space-y-2">
-          <p className="text-[10px] font-black uppercase text-gray-600 tracking-wider">⚡ Quick Demo Logins (Password: admin123)</p>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setIdentifier('farmer');
-                setPassword('admin123');
-              }}
-              className="neo-btn bg-[#15803D] text-white text-[11px] font-bold py-1.5 px-2 text-center"
-            >
-              🌾 Farmer (Demo)
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIdentifier('seller');
-                setPassword('admin123');
-              }}
-              className="neo-btn bg-[#EAB308] text-black text-[11px] font-bold py-1.5 px-2 text-center"
-            >
-              🚜 Seller (Demo)
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIdentifier('superadmin');
-                setPassword('admin123');
-              }}
-              className="neo-btn bg-[#0284C7] text-white text-[11px] font-bold py-1.5 px-2 text-center"
-            >
-              🛡️ Super Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIdentifier('govadmin');
-                setPassword('admin123');
-              }}
-              className="neo-btn bg-[#C2410C] text-white text-[11px] font-bold py-1.5 px-2 text-center"
-            >
-              🏛️ Govt DAO
-            </button>
-          </div>
-        </div>
       </form>
     </AuthShell>
   );
