@@ -1,7 +1,12 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
-const { Pool } = require('pg');
+const ws = require('ws');
+const { Pool, neonConfig } = require('@neondatabase/serverless');
+
+if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('neon.tech')) {
+  neonConfig.webSocketConstructor = ws;
+}
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
