@@ -1,0 +1,2209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Chatbot</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #FAF9F5;
+            padding: 40px;
+        }
+        h1 { font-size: 36px; margin-bottom: 20px; }
+        p { font-size: 16px; color: #64748b; margin-bottom: 40px; }
+
+        .chatbot-toggle {
+            position: fixed; bottom: 24px; right: 24px;
+            background: #EAB308; color: #0F172A;
+            border: 3px solid #0F172A; border-radius: 50px;
+            padding: 14px 22px; font-weight: 700; font-size: 15px;
+            cursor: pointer; display: flex; align-items: center; gap: 8px;
+            box-shadow: 4px 4px 0px #0F172A; z-index: 999;
+        }
+        .chatbot-toggle:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #0F172A; }
+
+        .chatbot-window {
+            position: fixed; bottom: 24px; right: 24px;
+            width: 420px; max-height: 620px;
+            background: #FAF9F5; border: 3px solid #0F172A;
+            border-radius: 16px; box-shadow: 8px 8px 0px #0F172A;
+            display: none; flex-direction: column; z-index: 999;
+        }
+        .chatbot-window.open { display: flex; }
+
+        .chatbot-header {
+            background: #0F172A; color: #FAF9F5;
+            padding: 14px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-radius: 13px 13px 0 0;
+        }
+        .chatbot-header h3 { margin: 0; font-size: 16px; }
+        .close-btn {
+            background: transparent; border: none; color: #FAF9F5;
+            font-size: 24px; cursor: pointer;
+        }
+
+        /* Language Selector */
+        .lang-bar {
+            display: flex; gap: 4px; padding: 8px 12px;
+            background: #fff; border-bottom: 2px dashed #0F172A;
+        }
+        .lang-btn {
+            flex: 1; padding: 6px; border: 2px solid #0F172A;
+            background: white; border-radius: 6px; cursor: pointer;
+            font-size: 12px; font-weight: 600; transition: all 0.15s;
+        }
+        .lang-btn.active {
+            background: #EAB308; box-shadow: 2px 2px 0px #0F172A;
+        }
+        .lang-btn:hover:not(.active) { background: #f1f5f9; }
+
+        .chatbot-messages {
+            flex: 1; overflow-y: auto; padding: 16px;
+            display: flex; flex-direction: column; gap: 12px; max-height: 400px;
+        }
+        .message { display: flex; gap: 8px; max-width: 85%; }
+        .message.user { align-self: flex-end; flex-direction: row-reverse; }
+        .message-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #EAB308; display: flex; align-items: center;
+            justify-content: center; font-size: 16px; flex-shrink: 0;
+        }
+        .message.user .message-avatar { background: #0F172A; color: #FAF9F5; }
+        .message-content {
+            background: white; padding: 10px 14px;
+            border: 2px solid #0F172A; border-radius: 12px;
+            font-size: 14px; line-height: 1.5;
+        }
+        .message.user .message-content { background: #EAB308; }
+
+        .detected-lang {
+            font-size: 10px; color: #64748b; margin-top: 4px;
+            font-style: italic;
+        }
+
+        .action-btn {
+            background: #0F172A; color: #EAB308;
+            border: 2px solid #0F172A; padding: 8px 14px;
+            border-radius: 8px; font-weight: 700; font-size: 12px;
+            cursor: pointer; margin-top: 8px; display: inline-block;
+        }
+        .action-btn:hover { background: #EAB308; color: #0F172A; }
+
+        .chatbot-input {
+            display: flex; gap: 8px; padding: 12px;
+            background: white; border-top: 2px solid #0F172A;
+            border-radius: 0 0 13px 13px;
+        }
+        .chatbot-input input {
+            flex: 1; border: 2px solid #0F172A; border-radius: 8px;
+            padding: 8px 12px; font-size: 14px; outline: none;
+        }
+        .chatbot-input button {
+            background: #EAB308; border: 2px solid #0F172A;
+            border-radius: 8px; padding: 8px 16px; cursor: pointer; font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 Navigation Chatbot</h1>
+    <p>Click the yellow "Need help?" button to test the chatbot. Try typing in English, Hindi, or Punjabi!</p>
+
+    <button class="chatbot-toggle" onclick="toggleChatbot()">💬 Need help?</button>
+
+    <div class="chatbot-window" id="chatbotWindow">
+        <div class="chatbot-header">
+            <h3>🤖 Navigation Assistant</h3>
+            <button class="close-btn" onclick="toggleChatbot()"></button>
+        </div>
+
+        <!-- Language Selector -->
+        <div class="lang-bar">
+            <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')">English</button>
+            <button class="lang-btn" data-lang="hi" onclick="setLanguage('hi')">हिंदी</button>
+            <button class="lang-btn" data-lang="pa" onclick="setLanguage('pa')">ਪੰਜਾਬੀ</button>
+        </div>
+
+        <div class="chatbot-messages" id="chatbotMessages"></div>
+
+        <div class="chatbot-input">
+            <input type="text" id="userInput" placeholder="Ask me anything..." onkeypress="if(event.key==='Enter')sendMessage()">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // 🌍 Current language
+        let currentLang = 'en';
+
+        // 🔤 Auto-detect language from script
+        function detectLanguage(text) {
+            // Devanagari (Hindi)
+            if (/[\u0900-\u097F]/.test(text)) return 'hi';
+            // Gurmukhi (Punjabi)
+            if (/[\u0A00-\u0A7F]/.test(text)) return 'pa';
+            return 'en';
+        }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+            // Clear chat and show welcome in new language
+            document.getElementById('chatbotMessages').innerHTML = '';
+            addMessage(getWelcomeMessage(), 'bot');
+        }
+                const KB = {
+
+            // ═══════════════════════════════════════
+            // 📞 CONTACT & SUPPORT
+            // ═══════════════════════════════════════
+            
+            contact_support: {
+                keywords: ['contact', 'support', 'support team', 'our info', 'phone', 'whatsapp', 'email', 'help desk',
+                           'संपर्क', 'सपोर्ट', 'सहायता', 'फोन', 'ईमेल', 'ਸੰਪਰਕ', 'ਸਪੋਰਟ', 'ਮਦਦ', 'ਫੋਨ', 'ਈਮੇਲ','our support','contact support','support contact','contact our support','contact our support team','support team contact',
+                        'संपर्क','आग','आग लगी',
+'संपर्क करें',
+'हमसे संपर्क करें',
+'सपोर्ट',
+'सपोर्ट टीम',
+'सहायता',
+'सहायता टीम',
+'हमारी सहायता',
+'हमारी सपोर्ट टीम',
+'सहायता केंद्र',
+'हेल्प डेस्क',
+'सहायता डेस्क',
+'संपर्क जानकारी',
+'संपर्क विवरण',
+'हमारी जानकारी',
+'फोन',
+'फोन नंबर',
+'मोबाइल नंबर',
+'व्हाट्सऐप',
+'व्हाट्सएप',
+'ईमेल',
+'ईमेल पता',
+'सपोर्ट से संपर्क करें',
+'सपोर्ट टीम से संपर्क करें',
+'सहायता टीम से संपर्क करें',
+'सपोर्ट संपर्क',
+'सहायता संपर्क',
+'हमारी सपोर्ट टीम से संपर्क करें',
+'ਸੰਪਰਕ',
+'ਸੰਪਰਕ ਕਰੋ',
+'ਸਾਡੇ ਨਾਲ ਸੰਪਰਕ ਕਰੋ',
+'ਸਪੋਰਟ',
+'ਸਪੋਰਟ ਟੀਮ',
+'ਮਦਦ',
+'ਮਦਦ ਟੀਮ',
+'ਸਾਡੀ ਮਦਦ',
+'ਸਾਡੀ ਸਪੋਰਟ ਟੀਮ',
+'ਮਦਦ ਕੇਂਦਰ',
+'ਹੈਲਪ ਡੈਸਕ',
+'ਮਦਦ ਡੈਸਕ',
+'ਸੰਪਰਕ ਜਾਣਕਾਰੀ',
+'contact karo',
+'contact karna',
+'contact karein',
+'humse contact karo',
+'humse contact karein',
+'hamse sampark karo',
+'hamse sampark karein',
+'support',
+'support team',
+'support se contact karo',
+'support se contact karein',
+'support team se contact karo',
+'support team se contact karein',
+'hamari support team',
+'hamari support team se contact karo',
+'help chahiye',
+'madad chahiye',
+'madad karo',
+'madad karein',
+'help desk',
+'support contact',
+'contact support',
+'support ka contact',
+'support ka number',
+'support team ka number',
+'phone number',
+'phone karo',
+'phone number chahiye',
+'contact number',
+'contact number chahiye',
+'whatsapp',
+'whatsapp number',
+'whatsapp par contact karo',
+'whatsapp par message karo',
+'email',
+'email karo',
+'email id',
+'email address',
+'email id chahiye',
+'hamari info',
+'hamari information',
+'contact information',
+'contact details',
+'support details',
+'support ki jankari',
+'contact ki jankari',
+'help ki jankari',
+'hamse baat karo',
+'team se baat karo',
+'support team se baat karo'],
+                en: `📞 <strong>Contact Our Support Team</strong><br><br>
+                     We are here to help you with any queries regarding the CSBP platform.<br><br>
+                     • <strong>Phone:</strong> +91 67676767676<br>
+                     • <strong>WhatsApp:</strong> +91 67676767676<br>
+                     • <strong>Email:</strong> csbp@gmail.com<br><br>
+                     Our team is available to assist you during standard business hours.`,
+                
+                hi: `📞 <strong>हमारी सपोर्ट टीम से संपर्क करें</strong><br><br>
+                     हम CSBP प्लेटफॉर्म से संबंधित किसी भी प्रश्न में आपकी सहायता के लिए यहाँ हैं।<br><br>
+                     • <strong>फोन:</strong> +91 67676767676<br>
+                     • <strong>व्हाट्सएप:</strong> +91 67676767676<br>
+                     • <strong>ईमेल:</strong> csbp@gmail.com<br><br>
+                     हमारी टीम कार्य घंटों के दौरान आपकी सहायता के लिए उपलब्ध है।`,
+                
+                pa: `📞 <strong>ਸਾਡੀ ਸਪੋਰਟ ਟੀਮ ਨਾਲ ਸੰਪਰਕ ਕਰੋ</strong><br><br>
+                     ਅਸੀਂ CSBP ਪਲੇਟਫਾਰਮ ਬਾਰੇ ਕਿਸੇ ਵੀ ਪੁੱਛਗਿੱਛ ਵਿੱਚ ਤੁਹਾਡੀ ਮਦਦ ਕਰਨ ਲਈ ਇੱਥੇ ਹਾਂ।<br><br>
+                     • <strong>ਫੋਨ:</strong> +91 67676767676<br>
+                     • <strong>ਵ੍ਹਾਟਸਐਪ:</strong> +91 67676767676<br>
+                     • <strong>ਈਮੇਲ:</strong> csbp@gmail.com<br><br>
+                     ਸਾਡੀ ਟੀਮ ਕਾਰਜ ਸਮੇਂ ਦੌਰਾਨ ਤੁਹਾਡੀ ਸਹਾਇਤਾ ਲਈ ਉਪਲਬਧ ਹੈ।`,
+                     
+                action: { label: '📧 Email Support', path: 'mailto:csbp@gmail.com' }
+            },
+
+            // ═══════════════════════════════════════
+            // 🔐 AUTHENTICATION & REGISTRATION
+            // ═══════════════════════════════════════
+            
+            sign_in: {
+                keywords: ['sign in', 'signin', 'login', 'log in', 'access account',
+                           'साइन इन', 'लॉगिन', 'प्रवेश', 'ਸਾਈਨ ਇਨ', 'ਲੌਗਇਨ','साइन इन', 'साइनइन', 'लॉगिन', 'लॉग इन', 'खाते में लॉगिन',
+                            'खाते में प्रवेश', 'अकाउंट में प्रवेश', 'खाता एक्सेस','ਸਾਈਨ ਇਨ', 'ਸਾਈਨਇਨ', 'ਲੌਗਇਨ', 'ਲੌਗ ਇਨ', 'ਖਾਤੇ ਵਿੱਚ ਲੌਗਇਨ',
+                            'ਖਾਤੇ ਵਿੱਚ ਦਾਖਲ ਹੋਣਾ', 'ਅਕਾਊਂਟ ਵਿੱਚ ਦਾਖਲ ਹੋਣਾ', 'ਖਾਤਾ ਐਕਸੈਸ'],
+                en: `To sign in to your account:<br><br>
+                     <strong>Step 1:</strong> Click the <strong>"Sign In"</strong> button at the top-right corner<br>
+                     <strong>Step 2:</strong> Enter your registered email/phone<br>
+                     <strong>Step 3:</strong> Enter your password<br>
+                     <strong>Step 4:</strong> Click <strong>"Login"</strong><br><br>
+                     Don't have an account? You can register as a <strong>Farmer</strong> or <strong>Seller</strong>.`,
+                hi: `अपने अकाउंट में साइन इन करने के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> ऊपर दाईं ओर <strong>"Sign In"</strong> बटन पर क्लिक करें<br>
+                     <strong>स्टेप 2:</strong> अपना रजिस्टर किया हुआ ईमेल/फोन दर्ज करें<br>
+                     <strong>स्टेप 3:</strong> पासवर्ड दर्ज करें<br>
+                     <strong>स्टेप 4:</strong> <strong>"Login"</strong> पर क्लिक करें<br><br>
+                     अकाउंट नहीं है? आप <strong>किसान</strong> या <strong>विक्रेता</strong> के रूप में रजिस्टर कर सकते हैं।`,
+                pa: `ਆਪਣੇ ਖਾਤੇ ਵਿੱਚ ਸਾਈਨ ਇਨ ਕਰਨ ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> ਉੱਪਰ ਸੱਜੇ ਪਾਸੇ <strong>"Sign In"</strong> ਬਟਨ 'ਤੇ ਕਲਿੱਕ ਕਰੋ<br>
+                     <strong>ਕਦਮ 2:</strong> ਆਪਣਾ ਰਜਿਸਟਰਡ ਈਮੇਲ/ਫੋਨ ਦਰਜ ਕਰੋ<br>
+                     <strong>ਕਦਮ 3:</strong> ਪਾਸਵਰਡ ਦਰਜ ਕਰੋ<br>
+                     <strong>ਕਦਮ 4:</strong> <strong>"Login"</strong> 'ਤੇ ਕਲਿੱਕ ਕਰੋ<br><br>
+                     ਖਾਤਾ ਨਹੀਂ ਹੈ? ਤੁਸੀਂ <strong>ਕਿਸਾਨ</strong> ਜਾਂ <strong>ਵਿਕਰੇਤਾ</strong> ਵਜੋਂ ਰਜਿਸਟਰ ਕਰ ਸਕਦੇ ਹੋ।`,
+                action: { label: '🔐 Sign In', path: '/signin' }
+            },
+
+            sign_up: {
+                keywords: ['sign up', 'signup', 'register', 'create account', 'new account','साइन अप', 'साइनअप', 'रजिस्टर', 'रजिस्ट्रेशन', 'पंजीकरण',
+'पंजीकृत करें', 'खाता बनाएं', 'अकाउंट बनाएं', 'नया खाता',
+'नया अकाउंट', 'खाता बनाना', 'अकाउंट बनाना','ਸਾਈਨ ਅੱਪ', 'ਸਾਈਨਅੱਪ', 'ਰਜਿਸਟਰ', 'ਰਜਿਸਟ੍ਰੇਸ਼ਨ', 'ਰਜਿਸਟਰੇਸ਼ਨ',
+'ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਕਰੋ', 'ਖਾਤਾ ਬਣਾਓ', 'ਅਕਾਊਂਟ ਬਣਾਓ', 'ਨਵਾਂ ਖਾਤਾ',
+'ਨਵਾਂ ਅਕਾਊਂਟ', 'ਖਾਤਾ ਬਣਾਉਣਾ', 'ਅਕਾਊਂਟ ਬਣਾਉਣਾ','sign up karna', 'signup karna', 'register karna',
+'register karo', 'account banana', 'account banao',
+'naya account', 'naya khata',
+'ਸਾਈਨ ਅੱਪ ਕਰਨਾ', 'ਰਜਿਸਟਰ ਕਰਨਾ', 'ਖਾਤਾ ਬਣਾਉਣਾ',
+                           'साइन अप', 'रजिस्टर', 'खाता बनाएं', 'ਸਾਈਨ ਅੱਪ', 'ਰਜਿਸਟਰ', 'ਖਾਤਾ ਬਣਾਓ'],
+                en: `To create a new account:<br><br>
+                     <strong>Step 1:</strong> Click <strong>"Sign Up"</strong> at the top-right corner<br>
+                     <strong>Step 2:</strong> Choose your role — <strong>Farmer</strong> or <strong>Seller</strong><br>
+                     <strong>Step 3:</strong> Fill in your details (name, phone, email, location)<br>
+                     <strong>Step 4:</strong> Verify your phone/email via OTP<br>
+                     <strong>Step 5:</strong> Complete your profile setup<br><br>
+                     ✅ Your account will be ready to use immediately!`,
+                hi: `नया खाता बनाने के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> ऊपर दाईं ओर <strong>"Sign Up"</strong> पर क्लिक करें<br>
+                     <strong>स्टेप 2:</strong> अपनी भूमिका चुनें — <strong>किसान</strong> या <strong>विक्रेता</strong><br>
+                     <strong>स्टेप 3:</strong> विवरण भरें (नाम, फोन, ईमेल, स्थान)<br>
+                     <strong>स्टेप 4:</strong> OTP द्वारा फोन/ईमेल सत्यापित करें<br>
+                     <strong>स्टेप 5:</strong> प्रोफ़ाइल सेटअप पूरा करें<br><br>
+                     ✅ आपका खाता तुरंत उपयोग के लिए तैयार हो जाएगा!`,
+                pa: `ਨਵਾਂ ਖਾਤਾ ਬਣਾਉਣ ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> ਉੱਪਰ ਸੱਜੇ ਪਾਸੇ <strong>"Sign Up"</strong> 'ਤੇ ਕਲਿੱਕ ਕਰੋ<br>
+                     <strong>ਕਦਮ 2:</strong> ਆਪਣੀ ਭੂਮਿਕਾ ਚੁਣੋ — <strong>ਕਿਸਾਨ</strong> ਜਾਂ <strong>ਵਿਕਰੇਤਾ</strong><br>
+                     <strong>ਕਦਮ 3:</strong> ਵੇਰਵੇ ਭਰੋ (ਨਾਮ, ਫੋਨ, ਈਮੇਲ, ਟਿਕਾਣਾ)<br>
+                     <strong>ਕਦਮ 4:</strong> OTP ਦੁਆਰਾ ਫੋਨ/ਈਮੇਲ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ<br>
+                     <strong>ਕਦਮ 5:</strong> ਪ੍ਰੋਫਾਈਲ ਸੈਟਅੱਪ ਪੂਰਾ ਕਰੋ<br><br>
+                     ✅ ਤੁਹਾਡਾ ਖਾਤਾ ਤੁਰੰਤ ਵਰਤਣ ਲਈ ਤਿਆਰ ਹੋ ਜਾਵੇਗਾ!`,
+                action: { label: '✨ Sign Up', path: '/signup' }
+            },
+
+            register_farmer: {
+                keywords: ['register as farmer', 'farmer registration', 'become farmer', 'join as farmer','किसान के रूप में पंजीकरण',
+'किसान के रूप में रजिस्टर',
+'किसान के रूप में रजिस्ट्रेशन',
+'किसान पंजीकरण',
+'किसान रजिस्ट्रेशन',
+'किसान बनें',
+'किसान बनना',
+'किसान के रूप में शामिल हों',
+'किसान के रूप में जुड़ें',
+'किसान के तौर पर रजिस्टर',
+'किसान के तौर पर पंजीकरण','ਕਿਸਾਨ ਵਜੋਂ ਰਜਿਸਟਰ',
+'ਕਿਸਾਨ ਵਜੋਂ ਰਜਿਸਟ੍ਰੇਸ਼ਨ',
+'ਕਿਸਾਨ ਰਜਿਸਟ੍ਰੇਸ਼ਨ',
+'ਕਿਸਾਨ ਰਜਿਸਟਰੇਸ਼ਨ',
+'ਕਿਸਾਨ ਬਣੋ',
+'ਕਿਸਾਨ ਬਣਨਾ',
+'ਕਿਸਾਨ ਵਜੋਂ ਸ਼ਾਮਲ ਹੋਵੋ',
+'ਕਿਸਾਨ ਵਜੋਂ ਜੁੜੋ',
+'ਕਿਸਾਨ ਦੇ ਤੌਰ ਤੇ ਰਜਿਸਟਰ',
+'ਕਿਸਾਨ ਦੇ ਤੌਰ ਤੇ ਰਜਿਸਟ੍ਰੇਸ਼ਨ','kisan ke roop mein register',
+'kisan registration',
+'kisan bano',
+'kisan ke taur par register',
+'kisan ke roop mein judna',
+'kisan vajon register',
+'kisan vajon registration',
+                           'किसान के रूप में रजिस्टर', 'ਕਿਸਾਨ ਵਜੋਂ ਰਜਿਸਟਰ','register farmer'],
+                en: `To register as a <strong>Farmer</strong>:<br><br>
+                     <strong>Step 1:</strong> Go to <strong>Sign Up</strong> and select "Farmer" role<br>
+                     <strong>Step 2:</strong> Enter your personal details (name, phone, district)<br>
+                     <strong>Step 3:</strong> Verify your identity via OTP<br>
+                     <strong>Step 4:</strong> Add your first land plot (area, crop type, location)<br>
+                     <strong>Step 5:</strong> Complete registration<br><br>
+                     ✅ You can now access the Farmer Dashboard, rent machinery, and sell stubble!`,
+                hi: `<strong>किसान</strong> के रूप में रजिस्टर करने के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> <strong>Sign Up</strong> पर जाएं और "Farmer" भूमिका चुनें<br>
+                     <strong>स्टेप 2:</strong> व्यक्तिगत विवरण दर्ज करें (नाम, फोन, जिला)<br>
+                     <strong>स्टेप 3:</strong> OTP द्वारा पहचान सत्यापित करें<br>
+                     <strong>स्टेप 4:</strong> अपना पहला खेत जोड़ें (क्षेत्रफल, फसल, स्थान)<br>
+                     <strong>स्टेप 5:</strong> पंजीकरण पूरा करें<br><br>
+                     ✅ अब आप किसान डैशबोर्ड, मशीनरी किराया, और पराली बेचना एक्सेस कर सकते हैं!`,
+                pa: `<strong>ਕਿਸਾਨ</strong> ਵਜੋਂ ਰਜਿਸਟਰ ਕਰਨ ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> <strong>Sign Up</strong> 'ਤੇ ਜਾਓ ਅਤੇ "Farmer" ਭੂਮਿਕਾ ਚੁਣੋ<br>
+                     <strong>ਕਦਮ 2:</strong> ਨਿੱਜੀ ਵੇਰਵੇ ਦਰਜ ਕਰੋ (ਨਾਮ, ਫੋਨ, ਜ਼ਿਲ੍ਹਾ)<br>
+                     <strong>ਕਦਮ 3:</strong> OTP ਦੁਆਰਾ ਪਛਾਣ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ<br>
+                     <strong>ਕਦਮ 4:</strong> ਆਪਣਾ ਪਹਿਲਾ ਖੇਤ ਜੋੜੋ (ਰਕਬਾ, ਫਸਲ, ਟਿਕਾਣਾ)<br>
+                     <strong>ਕਦਮ 5:</strong> ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰਾ ਕਰੋ<br><br>
+                     ✅ ਹੁਣ ਤੁਸੀਂ ਕਿਸਾਨ ਡੈਸ਼ਬੋਰਡ, ਮਸ਼ੀਨਰੀ ਕਿਰਾਇਆ, ਅਤੇ ਪਰਾਲੀ ਵੇਚਣਾ ਐਕਸੈਸ ਕਰ ਸਕਦੇ ਹੋ!`,
+                action: { label: '🌾 Register as Farmer', path: '/register/farmer' }
+            },
+
+            register_seller: {
+                keywords: ['register as seller', 'seller registration', 'become seller', 'join as seller','विक्रेता के रूप में पंजीकरण',
+'विक्रेता के रूप में रजिस्टर',
+'विक्रेता रजिस्ट्रेशन',
+'विक्रेता पंजीकरण',
+'विक्रेता बनें',
+'विक्रेता बनना',
+'विक्रेता के रूप में शामिल हों',
+'विक्रेता के रूप में जुड़ें',
+'सेलर के रूप में रजिस्टर',
+'सेलर रजिस्ट्रेशन',
+'सेलर बनें',
+'सेलर बनना',
+'सेलर के रूप में जुड़ें',
+'बेचने वाले के रूप में रजिस्टर','ਵਿਕਰੇਤਾ ਵਜੋਂ ਰਜਿਸਟਰ',
+'ਵਿਕਰੇਤਾ ਵਜੋਂ ਰਜਿਸਟ੍ਰੇਸ਼ਨ',
+'ਵਿਕਰੇਤਾ ਰਜਿਸਟ੍ਰੇਸ਼ਨ',
+'ਵਿਕਰੇਤਾ ਬਣੋ',
+'ਵਿਕਰੇਤਾ ਬਣਨਾ',
+'ਵਿਕਰੇਤਾ ਵਜੋਂ ਸ਼ਾਮਲ ਹੋਵੋ',
+'ਵਿਕਰੇਤਾ ਵਜੋਂ ਜੁੜੋ',
+'ਸੇਲਰ ਵਜੋਂ ਰਜਿਸਟਰ',
+'ਸੇਲਰ ਰਜਿਸਟ੍ਰੇਸ਼ਨ',
+'ਸੇਲਰ ਬਣੋ',
+'ਸੇਲਰ ਬਣਨਾ',
+'ਸੇਲਰ ਵਜੋਂ ਜੁੜੋ','seller ke roop mein register',
+'seller registration',
+'seller bano',
+'seller ke taur par register',
+'seller ke roop mein judna',
+'vikreta ke roop mein register',
+'vikreta registration',
+'seller vajon register',
+'seller vajon registration',
+                           'विक्रेता के रूप में रजिस्टर', 'ਵਿਕਰੇਤਾ ਵਜੋਂ ਰਜਿਸਟਰ','register seller'],
+                en: `To register as a <strong>Seller</strong> (Machinery Provider or Biomass Buyer):<br><br>
+                     <strong>Step 1:</strong> Go to <strong>Sign Up</strong> and select "Seller" role<br>
+                     <strong>Step 2:</strong> Enter business details (name, GST, contact)<br>
+                     <strong>Step 3:</strong> Upload KYC documents (business license, ID proof)<br>
+                     <strong>Step 4:</strong> Wait for admin verification (24-48 hours)<br>
+                     <strong>Step 5:</strong> Once approved, access your Seller Dashboard<br><br>
+                     ✅ Approved sellers can list equipment and receive farmer bookings.`,
+                hi: `<strong>विक्रेता</strong> (मशीनरी प्रदाता या बायोमास खरीददार) के रूप में रजिस्टर करने के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> <strong>Sign Up</strong> पर जाएं और "Seller" भूमिका चुनें<br>
+                     <strong>स्टेप 2:</strong> व्यावसायिक विवरण दर्ज करें (नाम, GST, संपर्क)<br>
+                     <strong>स्टेप 3:</strong> KYC दस्तावेज़ अपलोड करें<br>
+                     <strong>स्टेप 4:</strong> एडमिन सत्यापन की प्रतीक्षा करें (24-48 घंटे)<br>
+                     <strong>स्टेप 5:</strong> स्वीकृति के बाद, अपना विक्रेता डैशबोर्ड एक्सेस करें<br><br>
+                     ✅ स्वीकृत विक्रेता उपकरण सूचीबद्ध कर सकते हैं और किसान बुकिंग प्राप्त कर सकते हैं।`,
+                pa: `<strong>ਵਿਕਰੇਤਾ</strong> (ਮਸ਼ੀਨਰੀ ਪ੍ਰਦਾਤਾ ਜਾਂ ਬਾਇਓਮਾਸ ਖਰੀਦਦਾਰ) ਵਜੋਂ ਰਜਿਸਟਰ ਕਰਨ ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> <strong>Sign Up</strong> 'ਤੇ ਜਾਓ ਅਤੇ "Seller" ਭੂਮਿਕਾ ਚੁਣੋ<br>
+                     <strong>ਕਦਮ 2:</strong> ਕਾਰੋਬਾਰੀ ਵੇਰਵੇ ਦਰਜ ਕਰੋ (ਨਾਮ, GST, ਸੰਪਰਕ)<br>
+                     <strong>ਕਦਮ 3:</strong> KYC ਦਸਤਾਵੇਜ਼ ਅਪਲੋਡ ਕਰੋ<br>
+                     <strong>ਕਦਮ 4:</strong> ਐਡਮਿਨ ਪੁਸ਼ਟੀ ਦੀ ਉਡੀਕ ਕਰੋ (24-48 ਘੰਟੇ)<br>
+                     <strong>ਕਦਮ 5:</strong> ਮਨਜ਼ੂਰੀ ਤੋਂ ਬਾਅਦ, ਆਪਣਾ ਵਿਕਰੇਤਾ ਡੈਸ਼ਬੋਰਡ ਐਕਸੈਸ ਕਰੋ<br><br>
+                     ✅ ਮਨਜ਼ੂਰ ਵਿਕਰੇਤਾ ਉਪਕਰਣ ਸੂਚੀਬੱਧ ਕਰ ਸਕਦੇ ਹਨ ਅਤੇ ਕਿਸਾਨ ਬੁਕਿੰਗ ਪ੍ਰਾਪਤ ਕਰ ਸਕਦੇ ਹਨ।`,
+                action: { label: '🏭 Register as Seller', path: '/register/seller' }
+            },
+
+            // ═══════════════════════════════════════
+            // 🌾 FARMER FEATURES
+            // ═══════════════════════════════════════
+
+            farmer_dashboard: {
+                keywords: ['farmer dashboard', 'my dashboard', 'farmer home', 'farmer panel','किसान डैशबोर्ड',
+'मेरा डैशबोर्ड',
+'किसान होम',
+'किसान होम पेज',
+'किसान पैनल',
+'मेरा किसान डैशबोर्ड',
+'किसान का डैशबोर्ड',
+'किसान मुख्य पृष्ठ',
+'किसान मुख्य स्क्रीन','ਕਿਸਾਨ ਡੈਸ਼ਬੋਰਡ',
+'ਮੇਰਾ ਡੈਸ਼ਬੋਰਡ',
+'ਕਿਸਾਨ ਹੋਮ',
+'ਕਿਸਾਨ ਹੋਮ ਪੇਜ',
+'ਕਿਸਾਨ ਪੈਨਲ',
+'ਮੇਰਾ ਕਿਸਾਨ ਡੈਸ਼ਬੋਰਡ',
+'ਕਿਸਾਨ ਦਾ ਡੈਸ਼ਬੋਰਡ',
+'ਕਿਸਾਨ ਮੁੱਖ ਪੰਨਾ',
+'ਕਿਸਾਨ ਮੁੱਖ ਸਕ੍ਰੀਨ','kisan dashboard',
+'mera dashboard',
+'kisan home',
+'kisan panel',
+'mera kisan dashboard',
+'kisan da dashboard','kisan',
+                           'किसान डैशबोर्ड', 'ਕਿਸਾਨ ਡੈਸ਼ਬੋਰਡ','farmer'],
+                en: `The <strong>Farmer Dashboard</strong> is your main control center.<br><br>
+                     <strong>Here you can:</strong><br>
+                     • View all your registered land plots<br>
+                     • Access machinery marketplace<br>
+                     • Connect with stubble buyers<br>
+                     • Receive AI-powered recommendations<br>
+                     • Track your bookings<br><br>
+                     Navigate to it anytime from the main menu.`,
+                hi: `<strong>किसान डैशबोर्ड</strong> आपका मुख्य नियंत्रण केंद्र है।<br><br>
+                     <strong>यहाँ आप कर सकते हैं:</strong><br>
+                     • सभी रजिस्टर किए गए खेत देखें<br>
+                     • मशीनरी बाज़ार एक्सेस करें<br>
+                     • पराली खरीददारों से जुड़ें<br>
+                     • AI सुझाव प्राप्त करें<br>
+                     • अपनी बुकिंग और कमाई ट्रैक करें`,
+                pa: `<strong>ਕਿਸਾਨ ਡੈਸ਼ਬੋਰਡ</strong> ਤੁਹਾਡਾ ਮੁੱਖ ਕੰਟਰੋਲ ਸੈਂਟਰ ਹੈ।<br><br>
+                     <strong>ਇੱਥੇ ਤੁਸੀਂ ਕਰ ਸਕਦੇ ਹੋ:</strong><br>
+                     • ਸਾਰੇ ਰਜਿਸਟਰਡ ਖੇਤ ਵੇਖੋ<br>
+                     • ਮਸ਼ੀਨਰੀ ਬਾਜ਼ਾਰ ਐਕਸੈਸ ਕਰੋ<br>
+                     • ਪਰਾਲੀ ਖਰੀਦਦਾਰਾਂ ਨਾਲ ਜੁੜੋ<br>
+                     • AI ਸੁਝਾਅ ਪ੍ਰਾਪਤ ਕਰੋ<br>
+                     • ਆਪਣੀ ਬੁਕਿੰਗ ਅਤੇ ਕਮਾਈ ਟਰੈਕ ਕਰੋ`,
+                action: { label: '📊 Farmer Dashboard', path: '/farmer/dashboard' }
+            },
+
+            view_plots: {
+                keywords: ['see registered plots', 'my plots', 'my farms', 'view farms', 'list of farms', 'all farms','पंजीकृत प्लॉट देखें',
+'पंजीकृत भूखंड देखें',
+'मेरे प्लॉट',
+'मेरे खेत',
+'मेरे खेत देखें',
+'खेत देखें',
+'खेतों की सूची',
+'सभी खेत',
+'सभी खेत देखें',
+'पंजीकृत खेत',
+'पंजीकृत खेत देखें',
+'मेरे पंजीकृत प्लॉट','ਰਜਿਸਟਰ ਕੀਤੇ ਪਲਾਟ ਵੇਖੋ',
+'ਰਜਿਸਟਰ ਕੀਤੇ ਖੇਤ ਵੇਖੋ',
+'ਮੇਰੇ ਪਲਾਟ',
+'ਮੇਰੇ ਖੇਤ',
+'ਮੇਰੇ ਖੇਤ ਵੇਖੋ',
+'ਖੇਤ ਵੇਖੋ',
+'ਖੇਤਾਂ ਦੀ ਸੂਚੀ',
+'ਸਾਰੇ ਖੇਤ',
+'ਸਾਰੇ ਖੇਤ ਵੇਖੋ',
+'ਰਜਿਸਟਰ ਕੀਤੇ ਖੇਤ',
+'ਰਜਿਸਟਰ ਕੀਤੇ ਖੇਤ ਵੇਖੋ',
+'ਮੇਰੇ ਰਜਿਸਟਰ ਕੀਤੇ ਪਲਾਟ','registered plots dekho',
+'registered plot dekho',
+'mere plots',
+'mere khet',
+'mere khet dekho',
+'khet dekho',
+'kheton ki list',
+'sare khet',
+'sare khet dekho',
+'registered khet',
+'registered khet dekho',
+'mere registered plots',
+'registered plots vekho',
+'mere khet vekho',
+'khetan di list',
+'sare khet vekho','ghet', 'gheṭ',
+'घेत','खेत','जमीन', 'प्लॉट', 'प्लॉट्स','खेतों', 
+'ਖੇਤ',
+                           'रजिस्टर खेत देखें', 'मेरे खेत', 'ਰਜਿਸਟਰ ਖੇਤ ਵੇਖੋ', 'ਮੇਰੇ ਖੇਤ','plots','plot','farms','farms','land','lands'],
+                en: `To view all your <strong>registered land plots</strong>:<br><br>
+                     <strong>Step 1:</strong> Go to your <strong>Farmer Dashboard</strong><br>
+                     <strong>Step 2:</strong> Click on <strong>"My Land Plots"</strong> or "See Registered Plots"<br>
+                     <strong>Step 3:</strong> You'll see a list of all your farms with details:<br>
+                     • Plot name & area (in acres)<br>
+                     • Crop type<br>
+                     • Last harvest date<br>
+                     • GPS location<br><br>
+                     From here, you can add new plots or get recommendations for each one.`,
+                hi: `अपने सभी <strong>रजिस्टर किए गए खेत</strong> देखने के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> अपने <strong>किसान डैशबोर्ड</strong> पर जाएं<br>
+                     <strong>स्टेप 2:</strong> <strong>"My Land Plots"</strong> पर क्लिक करें<br>
+                     <strong>स्टेप 3:</strong> आपको सभी खेतों की सूची दिखेगी:<br>
+                     • प्लॉट का नाम और क्षेत्रफल (एकड़ में)<br>
+                     • फसल का प्रकार<br>
+                     • अंतिम कटाई की तारीख<br>
+                     • GPS लोकेशन`,
+                pa: `ਆਪਣੇ ਸਾਰੇ <strong>ਰਜਿਸਟਰਡ ਖੇਤ</strong> ਵੇਖਣ ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> ਆਪਣੇ <strong>ਕਿਸਾਨ ਡੈਸ਼ਬੋਰਡ</strong> 'ਤੇ ਜਾਓ<br>
+                     <strong>ਕਦਮ 2:</strong> <strong>"My Land Plots"</strong> 'ਤੇ ਕਲਿੱਕ ਕਰੋ<br>
+                     <strong>ਕਦਮ 3:</strong> ਤੁਹਾਨੂੰ ਸਾਰੇ ਖੇਤਾਂ ਦੀ ਸੂਚੀ ਦਿਖਾਈ ਦੇਵੇਗੀ:<br>
+                     • ਪਲਾਟ ਦਾ ਨਾਮ ਅਤੇ ਰਕਬਾ (ਏਕੜ ਵਿੱਚ)<br>
+                     • ਫਸਲ ਦੀ ਕਿਸਮ<br>
+                     • ਆਖਰੀ ਵਾਢੀ ਦੀ ਤਾਰੀਖ<br>
+                     • GPS ਲੋਕੇਸ਼ਨ`,
+                action: { label: '🌾 View My Plots', path: '/farmer/plots' }
+            },
+
+            add_farm: {
+                keywords: ['add land plot', 'add new farm', 'register farm', 'new plot', 'add plot', 'add farm','भूमि का प्लॉट जोड़ें',
+'जमीन का प्लॉट जोड़ें',
+'नया प्लॉट जोड़ें',
+'नया खेत जोड़ें',
+'नया फार्म जोड़ें',
+'खेत जोड़ें',
+'फार्म जोड़ें',
+'प्लॉट जोड़ें',
+'नया प्लॉट',
+'नया खेत',
+'खेत पंजीकृत करें',
+'खेत रजिस्टर करें',
+'फार्म पंजीकृत करें',
+'फार्म रजिस्टर करें','ਜ਼ਮੀਨ ਦਾ ਪਲਾਟ ਜੋੜੋ',
+'ਜ਼ਮੀਨ ਦਾ ਪਲਾਟ ਸ਼ਾਮਲ ਕਰੋ',
+'ਨਵਾਂ ਪਲਾਟ ਜੋੜੋ',
+'ਨਵਾਂ ਖੇਤ ਜੋੜੋ',
+'ਨਵਾਂ ਫਾਰਮ ਜੋੜੋ',
+'ਖੇਤ ਜੋੜੋ',
+'ਫਾਰਮ ਜੋੜੋ',
+'ਪਲਾਟ ਜੋੜੋ',
+'ਨਵਾਂ ਪਲਾਟ',
+'ਨਵਾਂ ਖੇਤ',
+'ਖੇਤ ਰਜਿਸਟਰ ਕਰੋ',
+'ਖੇਤ ਦੀ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਕਰੋ',
+'ਫਾਰਮ ਰਜਿਸਟਰ ਕਰੋ',
+'ਫਾਰਮ ਦੀ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਕਰੋ','land plot add karo',
+'plot add karo',
+'naya plot add karo',
+'naya khet add karo',
+'naya farm add karo',
+'khet add karo',
+'farm add karo',
+'plot jodo',
+'khet jodo',
+'naya plot',
+'naya khet',
+'khet register karo',
+'farm register karo',
+'zameen ka plot add karo',
+'zameen add karo',
+                           'नया खेत जोड़ें', 'ਖੇਤ ਜੋੜੋ', 'ਨਵਾਂ ਖੇਤ','add land','register land','register farm','register plot'],
+                en: `To <strong>add a new land plot</strong>:<br><br>
+                     <strong>Step 1:</strong> Go to <strong>Farmer Dashboard → My Land Plots</strong><br>
+                     <strong>Step 2:</strong> Click <strong>"+ Add New Farm"</strong> button<br>
+                     <strong>Step 3:</strong> Fill in the details:<br>
+                     • Plot name<br>
+                     • Crop type (Paddy / Wheat / Maize / Sugarcane)<br>
+                     • Area in acres<br>
+                     • GPS location or address<br>
+                     • Harvest date<br>
+                     <strong>Step 4:</strong> Click <strong>"Save"</strong><br><br>
+                     ✅ Your farm will be registered and you'll receive AI recommendations for it!`,
+                hi: `<strong>नया खेत जोड़ने</strong> के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> <strong>किसान डैशबोर्ड → My Land Plots</strong> पर जाएं<br>
+                     <strong>स्टेप 2:</strong> <strong>"+ Add New Farm"</strong> बटन पर क्लिक करें<br>
+                     <strong>स्टेप 3:</strong> विवरण भरें:<br>
+                     • प्लॉट का नाम<br>
+                     • फसल का प्रकार (धान / गेहूं / मक्का / गन्ना)<br>
+                     • एकड़ में क्षेत्रफल<br>
+                     • GPS लोकेशन या पता<br>
+                     • कटाई की तारीख<br>
+                     <strong>स्टेप 4:</strong> <strong>"Save"</strong> पर क्लिक करें`,
+                pa: `<strong>ਨਵਾਂ ਖੇਤ ਜੋੜਨ</strong> ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> <strong>ਕਿਸਾਨ ਡੈਸ਼ਬੋਰਡ → My Land Plots</strong> 'ਤੇ ਜਾਓ<br>
+                     <strong>ਕਦਮ 2:</strong> <strong>"+ Add New Farm"</strong> ਬਟਨ 'ਤੇ ਕਲਿੱਕ ਕਰੋ<br>
+                     <strong>ਕਦਮ 3:</strong> ਵੇਰਵੇ ਭਰੋ:<br>
+                     • ਪਲਾਟ ਦਾ ਨਾਮ<br>
+                     • ਫਸਲ ਦੀ ਕਿਸਮ (ਝੋਨਾ / ਕਣਕ / ਮੱਕੀ / ਗੰਨਾ)<br>
+                     • ਏਕੜ ਵਿੱਚ ਰਕਬਾ<br>
+                     • GPS ਲੋਕੇਸ਼ਨ ਜਾਂ ਪਤਾ<br>
+                     • ਵਾਢੀ ਦੀ ਤਾਰੀਖ<br>
+                     <strong>ਕਦਮ 4:</strong> <strong>"Save"</strong> 'ਤੇ ਕਲਿੱਕ ਕਰੋ`,
+                action: { label: '➕ Add New Farm', path: '/farmer/farms/new' }
+            },
+
+            sell_stubble: {
+                keywords: ['sell stubble', 'sell paddy straw', 'sell residue', 'sell biomass', 'find buyers', 'पराली बेचें','उत्पाद',
+'पराली बेचना',
+'धान की पराली बेचें',
+'धान का भूसा बेचें',
+'फसल अवशेष बेचें',
+'फसल का अवशेष बेचें',
+'जैविक अवशेष बेचें',
+'बायोमास बेचें',
+'बायोमास बेचना',
+'खरीदार खोजें',
+'खरीदार ढूंढें',
+'पराली के खरीदार खोजें',
+'फसल अवशेष के खरीदार खोजें',
+'पराली कौन खरीदेगा',
+'पराली बेचने के लिए खरीदार','ਪਰਾਲੀ ਵੇਚੋ',
+'ਪਰਾਲੀ ਵੇਚਣਾ',
+'ਝੋਨੇ ਦੀ ਪਰਾਲੀ ਵੇਚੋ',
+'ਝੋਨੇ ਦੀ ਪਰਾਲੀ ਵੇਚਣਾ',
+'ਫਸਲ ਦੀ ਰਹਿੰਦ-ਖੂੰਹਦ ਵੇਚੋ',
+'ਫਸਲ ਦੀ ਰਹਿੰਦ-ਖੂੰਹਦ ਵੇਚਣਾ',
+'ਬਾਇਓਮਾਸ ਵੇਚੋ',
+'ਬਾਇਓਮਾਸ ਵੇਚਣਾ',
+'ਖਰੀਦਦਾਰ ਲੱਭੋ',
+'ਖਰੀਦਦਾਰ ਭਾਲੋ',
+'ਪਰਾਲੀ ਦੇ ਖਰੀਦਦਾਰ ਲੱਭੋ',
+'ਫਸਲ ਦੀ ਰਹਿੰਦ-ਖੂੰਹਦ ਦੇ ਖਰੀਦਦਾਰ ਲੱਭੋ',
+'ਪਰਾਲੀ ਕੌਣ ਖਰੀਦੇਗਾ',
+'ਪਰਾਲੀ ਵੇਚਣ ਲਈ ਖਰੀਦਦਾਰ','parali becho',
+'parali bechna',
+'dhan ki parali becho',
+'fasal avshesh becho',
+'fasal ki residue becho',
+'biomass becho',
+'biomass bechna',
+'buyers find karo',
+'buyers dhundo',
+'parali ke buyers dhundo',
+'parali ka buyer',
+'fasal residue ke buyers','जलाने',
+                           'पराली बेचें', 'ਪਰਾਲੀ ਵੇਚੋ','पराली','अवशेष','फसल'],
+                en: `To <strong>sell your stubble/paddy straw</strong>:<br><br>
+                     <strong>Step 1:</strong> Go to <strong>Farmer Dashboard</strong><br>
+                     <strong>Step 2:</strong> Click on <strong>"Sell Stubble"</strong> or "Residue Buyers"<br>
+                     <strong>Step 3:</strong> Browse available buyers near you:<br>
+                     • Biofuel Plants<br>
+                     • Paper Mills<br>
+                     • Composting Units<br>
+                     • Animal Feed Producers<br>
+                     <strong>Step 4:</strong> Select a buyer and send a booking request<br>
+                     <strong>Step 5:</strong> Wait for buyer confirmation<br><br>
+                     💰 Typical earnings: ₹2,500 - ₹3,500 per tonne!`,
+                hi: `अपनी <strong>पराली बेचने</strong> के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> <strong>किसान डैशबोर्ड</strong> पर जाएं<br>
+                     <strong>स्टेप 2:</strong> <strong>"Sell Stubble"</strong> या "Residue Buyers" पर क्लिक करें<br>
+                     <strong>स्टेप 3:</strong> अपने पास उपलब्ध खरीददार ब्राउज़ करें<br>
+                     <strong>स्टेप 4:</strong> खरीददार चुनें और बुकिंग अनुरोध भेजें<br>
+                     <strong>स्टेप 5:</strong> खरीददार की पुष्टि की प्रतीक्षा करें<br><br>
+                     💰 आम कमाई: ₹2,500 - ₹3,500 प्रति टन!`,
+                pa: `ਆਪਣੀ <strong>ਪਰਾਲੀ ਵੇਚਣ</strong> ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> <strong>ਕਿਸਾਨ ਡੈਸ਼ਬੋਰਡ</strong> 'ਤੇ ਜਾਓ<br>
+                     <strong>ਕਦਮ 2:</strong> <strong>"Sell Stubble"</strong> ਜਾਂ "Residue Buyers" 'ਤੇ ਕਲਿੱਕ ਕਰੋ<br>
+                     <strong>ਕਦਮ 3:</strong> ਆਪਣੇ ਨੇੜੇ ਉਪਲਬਧ ਖਰੀਦਦਾਰ ਬ੍ਰਾਊਜ਼ ਕਰੋ<br>
+                     <strong>ਕਦਮ 4:</strong> ਖਰੀਦਦਾਰ ਚੁਣੋ ਅਤੇ ਬੁਕਿੰਗ ਬੇਨਤੀ ਭੇਜੋ<br>
+                     <strong>ਕਦਮ 5:</strong> ਖਰੀਦਦਾਰ ਦੀ ਪੁਸ਼ਟੀ ਦੀ ਉਡੀਕ ਕਰੋ<br><br>
+                     💰 ਆਮ ਕਮਾਈ: ₹2,500 - ₹3,500 ਪ੍ਰਤੀ ਟਨ!`,
+                action: { label: '💰 Sell Stubble', path: '/farmer/sell-stubble' }
+            },
+
+            hire_machinery: {
+                keywords: ['hire machinery', 'book a machine', 'rent machinery', 'marketplace', 'machinery marketplace',
+                           'rent machine', 'मशीनरी किराए', 'ਮਸ਼ੀਨਰੀ ਕਿਰਾਏ','machinery','machine','rent','hire','मशीनरी किराए पर','मशीनरी',
+'मशीनरी किराये पर',
+'मशीन किराए पर',
+'मशीन किराये पर',
+'मशीन किराए पर लें',
+'मशीन किराये पर लें',
+'मशीनरी किराए पर लें',
+'मशीनरी किराये पर लें',
+'मशीन बुक करें',
+'मशीन बुक करना',
+'मशीन किराए पर लेना',
+'मशीनरी किराए पर लेना',
+'मशीन किराए पर चाहिए',
+'मशीनरी किराए पर चाहिए',
+'मशीनरी मार्केटप्लेस',
+'मशीन मार्केटप्लेस',
+'मशीनरी बाजार',
+'मशीन बाजार',
+'मशीनरी',
+'मशीन',
+'किराया',
+'किराए',
+'किराये',
+'किराए पर',
+'भाड़े पर मशीन',
+'मशीन किराए पर देने वाला',
+'ਮਸ਼ੀਨਰੀ ਕਿਰਾਏ ਤੇ',
+'ਮਸ਼ੀਨਰੀ ਕਿਰਾਏ ਉੱਤੇ',
+'ਮਸ਼ੀਨ ਕਿਰਾਏ ਤੇ',
+'ਮਸ਼ੀਨ ਕਿਰਾਏ ਉੱਤੇ',
+'ਮਸ਼ੀਨ ਕਿਰਾਏ ਤੇ ਲਓ',
+'ਮਸ਼ੀਨਰੀ ਕਿਰਾਏ ਤੇ ਲਓ',
+'ਮਸ਼ੀਨ ਬੁੱਕ ਕਰੋ',
+'ਮਸ਼ੀਨ ਬੁੱਕ ਕਰਨਾ',
+'ਮਸ਼ੀਨ ਕਿਰਾਏ ਤੇ ਲੈਣਾ',
+'ਮਸ਼ੀਨਰੀ ਕਿਰਾਏ ਤੇ ਲੈਣਾ',
+'ਮਸ਼ੀਨ ਕਿਰਾਏ ਤੇ ਚਾਹੀਦੀ',
+'ਮਸ਼ੀਨਰੀ ਕਿਰਾਏ ਤੇ ਚਾਹੀਦੀ',
+'ਮਸ਼ੀਨਰੀ ਮਾਰਕੀਟਪਲੇਸ',
+'ਮਸ਼ੀਨ ਮਾਰਕੀਟਪਲੇਸ',
+'ਮਸ਼ੀਨਰੀ ਬਾਜ਼ਾਰ',
+'ਮਸ਼ੀਨ ਬਾਜ਼ਾਰ',
+'ਮਸ਼ੀਨਰੀ',
+'ਮਸ਼ੀਨ',
+'ਕਿਰਾਇਆ',
+'ਕਿਰਾਏ',
+'ਕਿਰਾਏ ਤੇ',
+'ਕਿਰਾਏ ਉੱਤੇ',
+'hire machinery',
+'machinery rent',
+'machine rent',
+'machine kiraye par',
+'machine kiraye pe',
+'machine kiraye par lo',
+'machine book karo',
+'machine rent karo',
+'machinery rent karo',
+'machine chahiye',
+'machinery chahiye',
+'machine bhade par',
+'machine bhade pe',
+'machine kiraye te',
+'machine kiraye te lao',
+'machine book karo',
+'machine rent te',
+'मशीन','मशीन किराए','किराए','रोटावेटर','मल्चर','बेलर'
+],
+                en: `To <strong>hire machinery from the marketplace</strong>:<br><br>
+                     <strong>Step 1:</strong> Go to <strong>Farmer Dashboard → Marketplace</strong><br>
+                     <strong>Step 2:</strong> Browse available machines:<br>
+                     • Happy Seeder<br>
+                     • Super Seeder<br>
+                     • Baler<br>
+                     • Mulcher<br>
+                     • Rotavator<br>
+                     <strong>Step 3:</strong> Filter by type, price, or distance<br>
+                     <strong>Step 4:</strong> Select a machine and click <strong>"Book Now"</strong><br>
+                     <strong>Step 5:</strong> Confirm booking details and submit<br><br>
+                     ✅ Sellers will receive your booking and confirm availability.`,
+                hi: `<strong>मार्केटप्लेस से मशीनरी किराए</strong> पर लेने के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> <strong>किसान डैशबोर्ड → Marketplace</strong> पर जाएं<br>
+                     <strong>स्टेप 2:</strong> उपलब्ध मशीनें ब्राउज़ करें<br>
+                     <strong>स्टेप 3:</strong> प्रकार, कीमत, या दूरी के अनुसार फ़िल्टर करें<br>
+                     <strong>स्टेप 4:</strong> मशीन चुनें और <strong>"Book Now"</strong> पर क्लिक करें<br>
+                     <strong>स्टेप 5:</strong> बुकिंग विवरण की पुष्टि करें और सबमिट करें`,
+                pa: `<strong>ਬਾਜ਼ਾਰ ਤੋਂ ਮਸ਼ੀਨਰੀ ਕਿਰਾਏ</strong> 'ਤੇ ਲੈਣ ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> <strong>ਕਿਸਾਨ ਡੈਸ਼ਬੋਰਡ → Marketplace</strong> 'ਤੇ ਜਾਓ<br>
+                     <strong>ਕਦਮ 2:</strong> ਉਪਲਬਧ ਮਸ਼ੀਨਾਂ ਬ੍ਰਾਊਜ਼ ਕਰੋ<br>
+                     <strong>ਕਦਮ 3:</strong> ਕਿਸਮ, ਕੀਮਤ, ਜਾਂ ਦੂਰੀ ਦੇ ਅਨੁਸਾਰ ਫਿਲਟਰ ਕਰੋ<br>
+                     <strong>ਕਦਮ 4:</strong> ਮਸ਼ੀਨ ਚੁਣੋ ਅਤੇ <strong>"Book Now"</strong> 'ਤੇ ਕਲਿੱਕ ਕਰੋ<br>
+                     <strong>ਕਦਮ 5:</strong> ਬੁਕਿੰਗ ਵੇਰਵਿਆਂ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ ਅਤੇ ਸਬਮਿਟ ਕਰੋ`,
+                action: { label: '🚜 Browse Marketplace', path: '/farmer/marketplace' }
+            },
+
+            recommendations: {
+                keywords: ['recommendations', 'stubble recommendations', 'recommendation engine', 'ai suggestion',
+                           'best option', 'what should i do', 'सुझाव', 'ਸੁਝਾਅ','reccommendation','suggestion','ai','engine','सिफारिशें',
+'सिफारिश',
+'पराली के सुझाव',
+'पराली के लिए सुझाव',
+'सिफारिश प्रणाली',
+'सुझाव प्रणाली',
+'एआई सुझाव',
+'एआई की सिफारिश',
+'बेहतरीन विकल्प',
+'सबसे अच्छा विकल्प',
+'मुझे क्या करना चाहिए',
+'क्या करना चाहिए',
+'मुझे क्या करना चाहिए बताएं',
+'सलाह',
+'सलाह दें',
+'सुझाव दें',
+'सुझाव चाहिए',
+'सही विकल्प',
+'उचित विकल्प',
+'मेरे लिए सबसे अच्छा विकल्प',
+'ਸਿਫਾਰਸ਼ਾਂ',
+'ਸਿਫਾਰਸ਼',
+'ਪਰਾਲੀ ਲਈ ਸੁਝਾਅ',
+'ਪਰਾਲੀ ਦੇ ਸੁਝਾਅ',
+'ਸਿਫਾਰਸ਼ ਪ੍ਰਣਾਲੀ',
+'ਸੁਝਾਅ ਪ੍ਰਣਾਲੀ',
+'ਏਆਈ ਸੁਝਾਅ',
+'ਏਆਈ ਦੀ ਸਿਫਾਰਸ਼',
+'ਵਧੀਆ ਵਿਕਲਪ',
+'ਸਭ ਤੋਂ ਵਧੀਆ ਵਿਕਲਪ',
+'ਮੈਨੂੰ ਕੀ ਕਰਨਾ ਚਾਹੀਦਾ ਹੈ',
+'ਕੀ ਕਰਨਾ ਚਾਹੀਦਾ ਹੈ',
+'ਮੈਨੂੰ ਕੀ ਕਰਨਾ ਚਾਹੀਦਾ ਹੈ ਦੱਸੋ',
+'ਸਲਾਹ',
+'ਸਲਾਹ ਦਿਓ',
+'ਸੁਝਾਅ ਦਿਓ',
+'ਸੁਝਾਅ ਚਾਹੀਦਾ ਹੈ',
+'ਸਹੀ ਵਿਕਲਪ',
+'ਢੁਕਵਾਂ ਵਿਕਲਪ',
+'ਮੇਰੇ ਲਈ ਸਭ ਤੋਂ ਵਧੀਆ ਵਿਕਲਪ',
+'recommendation do',
+'suggestion do',
+'sujhav do',
+'sujhav chahiye',
+'salah do',
+'mujhe kya karna chahiye',
+'kya karna chahiye',
+'best option kya hai',
+'mera best option',
+'parali ke liye suggestion',
+'parali ke liye recommendation',
+'ai suggestion do',
+'ai se suggestion',
+'sifarish do',
+'sifarish chahiye',
+'sujhav chahida',
+'salah chahidi',
+'mainu ki karna chahida',
+'ki karna chahida'],
+                en: `To receive <strong>AI-powered stubble management recommendations</strong>:<br><br>
+                     <strong>Step 1:</strong> Go to <strong>Farmer Dashboard</strong><br>
+                     <strong>Step 2:</strong> Select a registered land plot<br>
+                     <strong>Step 3:</strong> Click on <strong>"Get Recommendations"</strong><br>
+                     <strong>Step 4:</strong> Our AI engine analyzes:<br>
+                     • Your plot size and crop type<br>
+                     • Available machinery near you<br>
+                     • Current buyer demand and prices<br>
+                     • Weather and timing<br>
+                     <strong>Step 5:</strong> Receive personalized suggestions:<br>
+                     • Best machinery to rent<br>
+                     • Best buyers to sell to<br>
+                     • Estimated earnings comparison<br><br>
+                     💡 The engine updates recommendations based on real-time data!`,
+                hi: `<strong>AI-संचालित पराली प्रबंधन सुझाव</strong> प्राप्त करने के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> <strong>किसान डैशबोर्ड</strong> पर जाएं<br>
+                     <strong>स्टेप 2:</strong> एक रजिस्टर किया गया खेत चुनें<br>
+                     <strong>स्टेप 3:</strong> <strong>"Get Recommendations"</strong> पर क्लिक करें<br>
+                     <strong>स्टेप 4:</strong> हमारा AI इंजन विश्लेषण करता है:<br>
+                     • आपके प्लॉट का आकार और फसल<br>
+                     • आपके पास उपलब्ध मशीनरी<br>
+                     • वर्तमान खरीददार मांग और कीमतें<br>
+                     <strong>स्टेप 5:</strong> व्यक्तिगत सुझाव प्राप्त करें`,
+                pa: `<strong>AI-ਸੰਚਾਲਿਤ ਪਰਾਲੀ ਪ੍ਰਬੰਧਨ ਸੁਝਾਅ</strong> ਪ੍ਰਾਪਤ ਕਰਨ ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> <strong>ਕਿਸਾਨ ਡੈਸ਼ਬੋਰਡ</strong> 'ਤੇ ਜਾਓ<br>
+                     <strong>ਕਦਮ 2:</strong> ਇੱਕ ਰਜਿਸਟਰਡ ਖੇਤ ਚੁਣੋ<br>
+                     <strong>ਕਦਮ 3:</strong> <strong>"Get Recommendations"</strong> 'ਤੇ ਕਲਿੱਕ ਕਰੋ<br>
+                     <strong>ਕਦਮ 4:</strong> ਸਾਡਾ AI ਇੰਜਣ ਵਿਸ਼ਲੇਸ਼ਣ ਕਰਦਾ ਹੈ:<br>
+                     • ਤੁਹਾਡੇ ਪਲਾਟ ਦਾ ਆਕਾਰ ਅਤੇ ਫਸਲ<br>
+                     • ਤੁਹਾਡੇ ਨੇੜੇ ਉਪਲਬਧ ਮਸ਼ੀਨਰੀ<br>
+                     • ਮੌਜੂਦਾ ਖਰੀਦਦਾਰ ਮੰਗ ਅਤੇ ਕੀਮਤਾਂ<br>
+                     <strong>ਕਦਮ 5:</strong> ਨਿੱਜੀ ਸੁਝਾਅ ਪ੍ਰਾਪਤ ਕਰੋ`,
+                action: { label: '🤖 Get Recommendations', path: '/farmer/recommendations' }
+            },
+
+            // ═══════════════════════════════════════
+            // 🏭 SELLER FEATURES
+            // ═══════════════════════════════════════
+
+            buyer_dashboard: {
+                keywords: ['buyer dashboard', 'seller dashboard', 'seller home', 'seller panel',
+                           'खरीददार डैशबोर्ड', 'ਵਿਕਰੇਤਾ ਡੈਸ਼ਬੋਰਡ','buyer','seller','kyc','kyc update','kyc verification','kyc details',
+                        'खरीदार डैशबोर्ड',
+'खरीददार डैशबोर्ड',
+'विक्रेता डैशबोर्ड',
+'सेलर डैशबोर्ड',
+'सेलर होम',
+'सेलर पैनल',
+'खरीदार होम',
+'खरीदार पैनल',
+'खरीदार',
+'खरीददार',
+'विक्रेता',
+'सेलर',
+'केवाईसी',
+'केवाईसी अपडेट',
+'केवाईसी सत्यापन',
+'केवाईसी विवरण',
+'केवाईसी जानकारी',
+'केवाईसी की जानकारी',
+'केवाईसी अपडेट करें',
+'केवाईसी सत्यापित करें','खरीदार','ਖਰੀਦਦਾਰ ਡੈਸ਼ਬੋਰਡ',
+'ਵਿਕਰੇਤਾ ਡੈਸ਼ਬੋਰਡ',
+'ਸੇਲਰ ਡੈਸ਼ਬੋਰਡ',
+'ਸੇਲਰ ਹੋਮ',
+'ਸੇਲਰ ਪੈਨਲ',
+'ਖਰੀਦਦਾਰ ਹੋਮ',
+'ਖਰੀਦਦਾਰ ਪੈਨਲ',
+'ਖਰੀਦਦਾਰ',
+'ਵਿਕਰੇਤਾ',
+'ਸੇਲਰ',
+'ਕੇਵਾਈਸੀ',
+'ਕੇਵਾਈਸੀ ਅਪਡੇਟ',
+'ਕੇਵਾਈਸੀ ਵੈਰੀਫਿਕੇਸ਼ਨ',
+'ਕੇਵਾਈਸੀ ਤਸਦੀਕ',
+'ਕੇਵਾਈਸੀ ਵੇਰਵੇ',
+'ਕੇਵਾਈਸੀ ਜਾਣਕਾਰੀ',
+'ਕੇਵਾਈਸੀ ਦੀ ਜਾਣਕਾਰੀ',
+'ਕੇਵਾਈਸੀ ਅਪਡੇਟ ਕਰੋ',
+'ਕੇਵਾਈਸੀ ਵੈਰੀਫਾਈ ਕਰੋ',
+'buyer dashboard',
+'seller dashboard',
+'seller home',
+'seller panel',
+'buyer home',
+'buyer panel',
+'buyer',
+'seller',
+'khareedaar',
+'kharidaar',
+'vikreta',
+'seller dashboard kholo',
+'buyer dashboard kholo',
+'kyc update karo',
+'kyc verify karo',
+'kyc details',
+'kyc ki jankari',
+'kyc verification',
+'kyc update karna',
+'khareedaar dashboard',
+'vikreta dashboard',
+'खरीदारों',
+'सभी खरीदार',
+'खरीदारों की सूची',
+'खरीदारों को खोजें',
+'खरीदारों के लिए'],
+                en: `The <strong>Seller/Buyer Dashboard</strong> is your business control center.<br><br>
+                     <strong>Here you can:</strong><br>
+                     • View your business profile and KYC status<br>
+                     • Manage equipment listings<br>
+                     • Add biomass buyer requirements<br>
+                     • View marketplace listings<br>
+                     • Track received farmer bookings and offers<br>
+                     • Monitor earnings and fulfillment<br><br>
+                     Navigate to it from the main menu after signing in as a seller.`,
+                hi: `<strong>विक्रेता/खरीददार डैशबोर्ड</strong> आपका व्यावसायिक नियंत्रण केंद्र है।<br><br>
+                     <strong>यहाँ आप कर सकते हैं:</strong><br>
+                     • व्यावसायिक प्रोफ़ाइल और KYC स्थिति देखें<br>
+                     • उपकरण लिस्टिंग प्रबंधित करें<br>
+                     • बायोमास खरीददार आवश्यकताएं जोड़ें<br>
+                     • मार्केटप्लेस लिस्टिंग देखें<br>
+                     • प्राप्त किसान बुकिंग और ऑफ़र ट्रैक करें<br>
+                     • कमाई और पूर्ति की निगरानी करें`,
+                pa: `<strong>ਵਿਕਰੇਤਾ/ਖਰੀਦਦਾਰ ਡੈਸ਼ਬੋਰਡ</strong> ਤੁਹਾਡਾ ਕਾਰੋਬਾਰੀ ਕੰਟਰੋਲ ਸੈਂਟਰ ਹੈ।<br><br>
+                     <strong>ਇੱਥੇ ਤੁਸੀਂ ਕਰ ਸਕਦੇ ਹੋ:</strong><br>
+                     • ਕਾਰੋਬਾਰੀ ਪ੍ਰੋਫਾਈਲ ਅਤੇ KYC ਸਥਿਤੀ ਵੇਖੋ<br>
+                     • ਉਪਕਰਣ ਲਿਸਟਿੰਗਾਂ ਪ੍ਰਬੰਧਿਤ ਕਰੋ<br>
+                     • ਬਾਇਓਮਾਸ ਖਰੀਦਦਾਰ ਲੋੜਾਂ ਜੋੜੋ<br>
+                     • ਬਾਜ਼ਾਰ ਲਿਸਟਿੰਗਾਂ ਵੇਖੋ<br>
+                     • ਪ੍ਰਾਪਤ ਕਿਸਾਨ ਬੁਕਿੰਗ ਅਤੇ ਪੇਸ਼ਕਸ਼ਾਂ ਟਰੈਕ ਕਰੋ<br>
+                     • ਕਮਾਈ ਅਤੇ ਪੂਰਤੀ ਦੀ ਨਿਗਰਾਨੀ ਕਰੋ`,
+                action: { label: '🏭 Seller Dashboard', path: '/seller/dashboard' }
+            },
+
+            add_equipment: {
+                keywords: ['add equipment', 'add equipment listing', 'list equipment', 'add machine listing',
+                           'उपकरण जोड़ें', 'ਉਪਕਰਣ ਜੋੜੋ','equipment','machine','listing','add listing','उपकरण जोड़ें',
+'उपकरण की लिस्टिंग जोड़ें',
+'उपकरण सूचीबद्ध करें',
+'उपकरण की लिस्टिंग करें',
+'मशीन जोड़ें',
+'मशीन की लिस्टिंग जोड़ें',
+'मशीन सूचीबद्ध करें',
+'मशीन की लिस्टिंग करें',
+'नई मशीन जोड़ें',
+'नया उपकरण जोड़ें',
+'नई लिस्टिंग जोड़ें',
+'लिस्टिंग जोड़ें',
+'उपकरण',
+'मशीन',
+'लिस्टिंग',
+'सूची',
+'उपकरण बेचने के लिए सूचीबद्ध करें',
+'मशीन किराए पर देने के लिए सूचीबद्ध करें',
+'ਉਪਕਰਣ ਜੋੜੋ',
+'ਉਪਕਰਣ ਦੀ ਲਿਸਟਿੰਗ ਜੋੜੋ',
+'ਉਪਕਰਣ ਸੂਚੀਬੱਧ ਕਰੋ',
+'ਉਪਕਰਣ ਦੀ ਲਿਸਟਿੰਗ ਕਰੋ',
+'ਮਸ਼ੀਨ ਜੋੜੋ',
+'ਮਸ਼ੀਨ ਦੀ ਲਿਸਟਿੰਗ ਜੋੜੋ',
+'ਮਸ਼ੀਨ ਸੂਚੀਬੱਧ ਕਰੋ',
+'ਮਸ਼ੀਨ ਦੀ ਲਿਸਟਿੰਗ ਕਰੋ',
+'ਨਵੀਂ ਮਸ਼ੀਨ ਜੋੜੋ',
+'ਨਵਾਂ ਉਪਕਰਣ ਜੋੜੋ',
+'ਨਵੀਂ ਲਿਸਟਿੰਗ ਜੋੜੋ',
+'ਲਿਸਟਿੰਗ ਜੋੜੋ',
+'ਉਪਕਰਣ',
+'ਮਸ਼ੀਨ',
+'ਲਿਸਟਿੰਗ',
+'ਸੂਚੀ',
+'ਉਪਕਰਣ ਵੇਚਣ ਲਈ ਸੂਚੀਬੱਧ ਕਰੋ',
+'ਮਸ਼ੀਨ ਕਿਰਾਏ ਤੇ ਦੇਣ ਲਈ ਸੂਚੀਬੱਧ ਕਰੋ',
+'equipment add karo',
+'upkaran jodo',
+'upkaran add karo',
+'machine add karo',
+'nayi machine add karo',
+'naya equipment add karo',
+'equipment listing add karo',
+'machine listing add karo',
+'listing add karo',
+'new listing add karo',
+'equipment list karo',
+'machine list karo',
+'machine kiraye par dene ke liye list karo',
+'equipment kiraye par dene ke liye list karo',
+'machine listing banao',
+'equipment listing banao'],
+                en: `To <strong>add an equipment listing</strong> as a seller:<br><br>
+                     <strong>Step 1:</strong> Go to <strong>Seller Dashboard</strong><br>
+                     <strong>Step 2:</strong> Click on <strong>"Add Equipment Listing"</strong><br>
+                     <strong>Step 3:</strong> Fill in equipment details:<br>
+                     • Equipment type (Happy Seeder, Baler, etc.)<br>
+                     • Rental price per acre/day<br>
+                     • Availability dates<br>
+                     • Location/service area<br>
+                     • Photos and description<br>
+                     <strong>Step 4:</strong> Submit for review<br><br>
+                     ✅ Once approved, farmers can see and book your equipment!`,
+                hi: `विक्रेता के रूप में <strong>उपकरण लिस्टिंग जोड़ने</strong> के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> <strong>विक्रेता डैशबोर्ड</strong> पर जाएं<br>
+                     <strong>स्टेप 2:</strong> <strong>"Add Equipment Listing"</strong> पर क्लिक करें<br>
+                     <strong>स्टेप 3:</strong> उपकरण विवरण भरें:<br>
+                     • उपकरण का प्रकार<br>
+                     • किराया मूल्य (प्रति एकड़/दिन)<br>
+                     • उपलब्धता तिथियाँ<br>
+                     • स्थान/सेवा क्षेत्र<br>
+                     • फोटो और विवरण<br>
+                     <strong>स्टेप 4:</strong> समीक्षा के लिए सबमिट करें`,
+                pa: `ਵਿਕਰੇਤਾ ਵਜੋਂ <strong>ਉਪਕਰਣ ਲਿਸਟਿੰਗ ਜੋੜਨ</strong> ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> <strong>ਵਿਕਰੇਤਾ ਡੈਸ਼ਬੋਰਡ</strong> 'ਤੇ ਜਾਓ<br>
+                     <strong>ਕਦਮ 2:</strong> <strong>"Add Equipment Listing"</strong> 'ਤੇ ਕਲਿੱਕ ਕਰੋ<br>
+                     <strong>ਕਦਮ 3:</strong> ਉਪਕਰਣ ਵੇਰਵੇ ਭਰੋ:<br>
+                     • ਉਪਕਰਣ ਦੀ ਕਿਸਮ<br>
+                     • ਕਿਰਾਏ ਦੀ ਕੀਮਤ (ਪ੍ਰਤੀ ਏਕੜ/ਦਿਨ)<br>
+                     • ਉਪਲਬਧਤਾ ਤਾਰੀਖਾਂ<br>
+                     • ਟਿਕਾਣਾ/ਸੇਵਾ ਖੇਤਰ<br>
+                     • ਫੋਟੋ ਅਤੇ ਵੇਰਵਾ<br>
+                     <strong>ਕਦਮ 4:</strong> ਸਮੀਖਿਆ ਲਈ ਸਬਮਿਟ ਕਰੋ`,
+                action: { label: '🚜 Add Equipment', path: '/seller/equipment/new' }
+            },
+
+            add_biomass_buyer: {
+                keywords: ['add biomass buyer', 'add buyer listing', 'post buyer requirement', 'biomass demand',
+                           'बायोमास खरीददार जोड़ें', 'ਬਾਇਓਮਾਸ ਖਰੀਦਦਾਰ ਜੋੜੋ','biomass',
+                        'बायोमास खरीदार जोड़ें','बायोमास','अवशेष','फसल',
+'बायोमास खरीददार जोड़ें',
+'बायोमास खरीदार की लिस्टिंग जोड़ें',
+'खरीदार की लिस्टिंग जोड़ें',
+'खरीदार की मांग पोस्ट करें',
+'खरीदार की आवश्यकता पोस्ट करें',
+'बायोमास की मांग',
+'बायोमास खरीदने की मांग',
+'बायोमास खरीदार की मांग',
+'बायोमास खरीदार जोड़ना',
+'बायोमास खरीददार जोड़ना',
+'बायोमास खरीदार',
+'बायोमास खरीददार',
+'बायोमास खरीदने वाला जोड़ें',
+'बायोमास खरीदने वाले जोड़ें',
+'बायोमास की खरीद की मांग','बायोमास',
+'ਬਾਇਓਮਾਸ ਖਰੀਦਦਾਰ ਜੋੜੋ',
+'ਬਾਇਓਮਾਸ ਖਰੀਦਦਾਰ ਦੀ ਲਿਸਟਿੰਗ ਜੋੜੋ',
+'ਖਰੀਦਦਾਰ ਦੀ ਲਿਸਟਿੰਗ ਜੋੜੋ',
+'ਖਰੀਦਦਾਰ ਦੀ ਮੰਗ ਪੋਸਟ ਕਰੋ',
+'ਖਰੀਦਦਾਰ ਦੀ ਲੋੜ ਪੋਸਟ ਕਰੋ',
+'ਬਾਇਓਮਾਸ ਦੀ ਮੰਗ',
+'ਬਾਇਓਮਾਸ ਖਰੀਦਣ ਦੀ ਮੰਗ',
+'ਬਾਇਓਮਾਸ ਖਰੀਦਦਾਰ ਦੀ ਮੰਗ',
+'ਬਾਇਓਮਾਸ ਖਰੀਦਦਾਰ ਜੋੜਨਾ',
+'ਬਾਇਓਮਾਸ ਖਰੀਦਦਾਰ',
+'ਬਾਇਓਮਾਸ ਖਰੀਦਣ ਵਾਲਾ ਜੋੜੋ',
+'ਬਾਇਓਮਾਸ ਖਰੀਦਣ ਵਾਲੇ ਜੋੜੋ',
+'ਬਾਇਓਮਾਸ ਖਰੀਦ ਦੀ ਮੰਗ',
+'biomass buyer add karo',
+'biomass buyer jodo',
+'biomass buyer ki listing add karo',
+'buyer listing add karo',
+'buyer requirement post karo',
+'biomass demand',
+'biomass ki demand',
+'biomass kharidne ki demand',
+'biomass buyer add karna',
+'biomass buyer',
+'biomass kharidne wala',
+'biomass kharidne wale',
+'biomass ki requirement'],
+                en: `To <strong>add a biomass buyer listing</strong> (if you buy stubble):<br><br>
+                     <strong>Step 1:</strong> Go to <strong>Seller Dashboard</strong><br>
+                     <strong>Step 2:</strong> Click on <strong>"Add Biomass Buyer"</strong><br>
+                     <strong>Step 3:</strong> Enter your requirements:<br>
+                     • Type of biomass needed (Paddy straw, etc.)<br>
+                     • Quantity required (in tonnes)<br>
+                     • Price offered per tonne<br>
+                     • Pickup/delivery location<br>
+                     • Contact details<br>
+                     <strong>Step 4:</strong> Submit listing<br><br>
+                     ✅ Farmers with matching stubble will see your listing and send offers!`,
+                hi: `<strong>बायोमास खरीददार लिस्टिंग जोड़ने</strong> के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> <strong>विक्रेता डैशबोर्ड</strong> पर जाएं<br>
+                     <strong>स्टेप 2:</strong> <strong>"Add Biomass Buyer"</strong> पर क्लिक करें<br>
+                     <strong>स्टेप 3:</strong> अपनी आवश्यकताएं दर्ज करें:<br>
+                     • बायोमास का प्रकार (पराली आदि)<br>
+                     • आवश्यक मात्रा (टन में)<br>
+                     • प्रति टन प्रस्तावित मूल्य<br>
+                     • पिकअप/डिलीवरी स्थान<br>
+                     <strong>स्टेप 4:</strong> लिस्टिंग सबमिट करें`,
+                pa: `<strong>ਬਾਇਓਮਾਸ ਖਰੀਦਦਾਰ ਲਿਸਟਿੰਗ ਜੋੜਨ</strong> ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> <strong>ਵਿਕਰੇਤਾ ਡੈਸ਼ਬੋਰਡ</strong> 'ਤੇ ਜਾਓ<br>
+                     <strong>ਕਦਮ 2:</strong> <strong>"Add Biomass Buyer"</strong> 'ਤੇ ਕਲਿੱਕ ਕਰੋ<br>
+                     <strong>ਕਦਮ 3:</strong> ਆਪਣੀਆਂ ਲੋੜਾਂ ਦਰਜ ਕਰੋ:<br>
+                     • ਬਾਇਓਮਾਸ ਦੀ ਕਿਸਮ (ਪਰਾਲੀ ਆਦਿ)<br>
+                     • ਲੋੜੀਂਦੀ ਮਾਤਰਾ (ਟਨ ਵਿੱਚ)<br>
+                     • ਪ੍ਰਤੀ ਟਨ ਪ੍ਰਸਤਾਵਿਤ ਕੀਮਤ<br>
+                     • ਪਿਕਅੱਪ/ਡਿਲੀਵਰੀ ਟਿਕਾਣਾ<br>
+                     <strong>ਕਦਮ 4:</strong> ਲਿਸਟਿੰਗ ਸਬਮਿਟ ਕਰੋ`,
+                action: { label: '💼 Add Buyer Listing', path: '/seller/buyer/new' }
+            },
+
+            marketplace_listings: {
+                keywords: ['marketplace listings', 'view listings', 'my listings', 'all listings',
+                           'ਮਾਰਕੀਟਪਲੇਸ ਲਿਸਟਿੰਗ', 'ਮੇਰੀਆਂ ਲਿਸਟਿੰਗਾਂ', 'view marketplace listings', 'my marketplace listings','marketplace','listings','my listings','my marketplace','मार्केटप्लेस लिस्टिंग','हैप्पी सीडर','सीडर','हैप्पी','बेलर मशीन','मल्चर',
+'मार्केटप्लेस की लिस्टिंग',
+'मार्केटप्लेस की सूची',
+'लिस्टिंग देखें',
+'सभी लिस्टिंग देखें',
+'मेरी लिस्टिंग',
+'मेरी लिस्टिंग्स',
+'सभी लिस्टिंग',
+'मार्केटप्लेस लिस्टिंग देखें',
+'मार्केटप्लेस की लिस्टिंग देखें',
+'मेरी मार्केटप्लेस लिस्टिंग',
+'मेरी मार्केटप्लेस लिस्टिंग्स',
+'मार्केटप्लेस',
+'लिस्टिंग',
+'लिस्टिंग्स',
+'ਮਾਰਕੀਟਪਲੇਸ ਲਿਸਟਿੰਗ',
+'ਮਾਰਕੀਟਪਲੇਸ ਦੀ ਲਿਸਟਿੰਗ',
+'ਮਾਰਕੀਟਪਲੇਸ ਦੀ ਸੂਚੀ',
+'ਲਿਸਟਿੰਗ ਵੇਖੋ',
+'ਸਾਰੀਆਂ ਲਿਸਟਿੰਗਾਂ ਵੇਖੋ',
+'ਮੇਰੀ ਲਿਸਟਿੰਗ',
+'ਮੇਰੀਆਂ ਲਿਸਟਿੰਗਾਂ',
+'ਸਾਰੀਆਂ ਲਿਸਟਿੰਗਾਂ',
+'ਮਾਰਕੀਟਪਲੇਸ ਲਿਸਟਿੰਗ ਵੇਖੋ',
+'ਮਾਰਕੀਟਪਲੇਸ ਦੀ ਲਿਸਟਿੰਗ ਵੇਖੋ',
+'ਮੇਰੀ ਮਾਰਕੀਟਪਲੇਸ ਲਿਸਟਿੰਗ',
+'ਮੇਰੀਆਂ ਮਾਰਕੀਟਪਲੇਸ ਲਿਸਟਿੰਗਾਂ',
+'ਮਾਰਕੀਟਪਲੇਸ',
+'ਲਿਸਟਿੰਗ',
+'ਲਿਸਟਿੰਗਾਂ',
+'ਮੇਰੀ ਲਿਸਟਿੰਗ ਵੇਖੋ',
+'ਸਾਰੀਆਂ ਲਿਸਟਿੰਗਾਂ ਵੇਖੋ',
+'marketplace listing dekho',
+'listings dekho',
+'meri listing',
+'meri listings',
+'sabhi listings',
+'sabhi listing dekho',
+'meri marketplace listing',
+'meri marketplace listings',
+'marketplace dekho',
+'meri marketplace',
+'listing dekho',
+'listings dekhna',
+'meri listing vekho',
+'meriyan listings',
+'sariyan listings',
+'marketplace listing vekho',
+'meri marketplace listing',
+'मेरी लिस्टिंग देखें',
+'सभी लिस्टिंग देखें',],
+                en: `To <strong>view your marketplace listings</strong>:<br><br>
+                     <strong>Step 1:</strong> Go to <strong>Seller Dashboard</strong><br>
+                     <strong>Step 2:</strong> Click on <strong>"Marketplace Listings"</strong><br>
+                     <strong>Step 3:</strong> You'll see all your active listings:<br>
+                     • Equipment rentals<br>
+                     • Biomass buyer requirements<br><br>
+                     <strong>For each listing, you can:</strong><br>
+                     • Edit details<br>
+                     • Update availability<br>
+                     • Pause or remove listing<br>
+                     • View booking history`,
+                hi: `अपनी <strong>मार्केटप्लेस लिस्टिंग</strong> देखने के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> <strong>विक्रेता डैशबोर्ड</strong> पर जाएं<br>
+                     <strong>स्टेप 2:</strong> <strong>"Marketplace Listings"</strong> पर क्लिक करें<br>
+                     <strong>स्टेप 3:</strong> आपकी सभी सक्रिय लिस्टिंग दिखेंगी:<br>
+                     • उपकरण किराए<br>
+                     • बायोमास खरीददार आवश्यकताएं`,
+                pa: `ਆਪਣੀਆਂ <strong>ਬਾਜ਼ਾਰ ਲਿਸਟਿੰਗਾਂ</strong> ਵੇਖਣ ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> <strong>ਵਿਕਰੇਤਾ ਡੈਸ਼ਬੋਰਡ</strong> 'ਤੇ ਜਾਓ<br>
+                     <strong>ਕਦਮ 2:</strong> <strong>"Marketplace Listings"</strong> 'ਤੇ ਕਲਿੱਕ ਕਰੋ<br>
+                     <strong>ਕਦਮ 3:</strong> ਤੁਹਾਡੀਆਂ ਸਾਰੀਆਂ ਸਰਗਰਮ ਲਿਸਟਿੰਗਾਂ ਦਿਖਾਈ ਦੇਣਗੀਆਂ:<br>
+                     • ਉਪਕਰਣ ਕਿਰਾਏ<br>
+                     • ਬਾਇਓਮਾਸ ਖਰੀਦਦਾਰ ਲੋੜਾਂ`,
+                action: { label: '📋 View Listings', path: '/seller/listings' }
+            },
+
+            buyer_demands: {
+                keywords: ['buyer demands', 'buyer requirements', 'market demand', 'what buyers want',
+                           'ਖਰੀਦਦਾਰ ਮੰਗ', 'ਖਰੀਦਦਾਰ ਲੋੜਾਂ', 'view buyer demands', 'my buyer demands','my demands','buyer requirements','buyer demand','buyer requirements','buyer demand list','demands','requirements','buyer requirements list',
+                        'खरीदारों की मांग',
+'खरीदारों की मांगें',
+'खरीदार की मांग',
+'खरीदार की मांगें',
+'खरीदारों की आवश्यकताएं',
+'खरीदारों की जरूरतें',
+'खरीदार की आवश्यकता',
+'खरीदार की जरूरत',
+'बाजार की मांग',
+'मार्केट की मांग',
+'खरीदार क्या चाहते हैं',
+'खरीदारों को क्या चाहिए',
+'खरीदारों की मांग देखें',
+'खरीदारों की आवश्यकताएं देखें',
+'मेरी खरीदार मांगें',
+'मेरी खरीदार आवश्यकताएं',
+'मेरी मांगें',
+'मेरी आवश्यकताएं',
+'खरीदार मांग सूची',
+'खरीदारों की मांग सूची',
+'खरीदार आवश्यकताओं की सूची',
+'खरीदारों की आवश्यकताओं की सूची',
+'सभी खरीदार मांगें',
+'सभी खरीदार आवश्यकताएं',
+'ਖਰੀਦਦਾਰਾਂ ਦੀ ਮੰਗ',
+'ਖਰੀਦਦਾਰਾਂ ਦੀਆਂ ਮੰਗਾਂ',
+'ਖਰੀਦਦਾਰ ਦੀ ਮੰਗ',
+'ਖਰੀਦਦਾਰ ਦੀਆਂ ਮੰਗਾਂ',
+'ਖਰੀਦਦਾਰਾਂ ਦੀਆਂ ਲੋੜਾਂ',
+'ਖਰੀਦਦਾਰਾਂ ਦੀਆਂ ਜ਼ਰੂਰਤਾਂ',
+'ਖਰੀਦਦਾਰ ਦੀ ਲੋੜ',
+'ਖਰੀਦਦਾਰ ਦੀ ਜ਼ਰੂਰਤ',
+'ਮਾਰਕੀਟ ਦੀ ਮੰਗ',
+'ਬਾਜ਼ਾਰ ਦੀ ਮੰਗ',
+'ਖਰੀਦਦਾਰ ਕੀ ਚਾਹੁੰਦੇ ਹਨ',
+'ਖਰੀਦਦਾਰਾਂ ਨੂੰ ਕੀ ਚਾਹੀਦਾ ਹੈ',
+'ਖਰੀਦਦਾਰਾਂ ਦੀ ਮੰਗ ਵੇਖੋ',
+'ਖਰੀਦਦਾਰਾਂ ਦੀਆਂ ਲੋੜਾਂ ਵੇਖੋ',
+'ਮੇਰੀਆਂ ਖਰੀਦਦਾਰ ਮੰਗਾਂ',
+'ਮੇਰੀਆਂ ਖਰੀਦਦਾਰ ਲੋੜਾਂ',
+'ਮੇਰੀਆਂ ਮੰਗਾਂ',
+'ਮੇਰੀਆਂ ਲੋੜਾਂ',
+'ਖਰੀਦਦਾਰ ਮੰਗ ਸੂਚੀ',
+'ਖਰੀਦਦਾਰਾਂ ਦੀ ਮੰਗ ਸੂਚੀ',
+'ਖਰੀਦਦਾਰ ਲੋੜਾਂ ਦੀ ਸੂਚੀ',
+'ਖਰੀਦਦਾਰਾਂ ਦੀਆਂ ਲੋੜਾਂ ਦੀ ਸੂਚੀ',
+'ਸਾਰੀਆਂ ਖਰੀਦਦਾਰ ਮੰਗਾਂ',
+'ਸਾਰੀਆਂ ਖਰੀਦਦਾਰ ਲੋੜਾਂ',
+'buyers ki demand',
+'buyers ki demands',
+'buyer ki demand',
+'buyer ki requirements',
+'buyers ki requirements',
+'buyers ko kya chahiye',
+'buyers kya chahte hain',
+'market ki demand',
+'buyer demands dekho',
+'buyer requirements dekho',
+'meri buyer demands',
+'meri buyer requirements',
+'meri demands',
+'meri requirements',
+'buyer demand list',
+'buyers demand list',
+'buyer requirements list',
+'buyers requirements list',
+'sabhi buyer demands',
+'sabhi buyer requirements',
+'buyer di demand',
+'buyers diyan demands',
+'buyer dian lodan',
+'buyer requirements vekho',
+'buyer demands vekho'],
+                en: `To view <strong>current buyer demands and requirements</strong>:<br><br>
+                     <strong>Step 1:</strong> Go to <strong>Seller Dashboard</strong><br>
+                     <strong>Step 2:</strong> Click on <strong>"Buyer Demands"</strong><br>
+                     <strong>Step 3:</strong> See active requirements from biomass buyers:<br>
+                     • Type of stubble needed<br>
+                     • Quantity in tonnes<br>
+                     • Offered price per tonne<br>
+                     • Buyer location<br>
+                     • Pickup deadline<br><br>
+                     💡 Match your available stubble with these demands to get the best price!`,
+                hi: `<strong>वर्तमान खरीददार मांग और आवश्यकताएं</strong> देखने के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> <strong>विक्रेता डैशबोर्ड</strong> पर जाएं<br>
+                     <strong>स्टेप 2:</strong> <strong>"Buyer Demands"</strong> पर क्लिक करें<br>
+                     <strong>स्टेप 3:</strong> बायोमास खरीददारों की सक्रिय आवश्यकताएं देखें:<br>
+                     • आवश्यक पराली का प्रकार<br>
+                     • टन में मात्रा<br>
+                     • प्रति टन प्रस्तावित मूल्य<br>
+                     • खरीददार का स्थान`,
+                pa: `<strong>ਮੌਜੂਦਾ ਖਰੀਦਦਾਰ ਮੰਗ ਅਤੇ ਲੋੜਾਂ</strong> ਵੇਖਣ ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> <strong>ਵਿਕਰੇਤਾ ਡੈਸ਼ਬੋਰਡ</strong> 'ਤੇ ਜਾਓ<br>
+                     <strong>ਕਦਮ 2:</strong> <strong>"Buyer Demands"</strong> 'ਤੇ ਕਲਿੱਕ ਕਰੋ<br>
+                     <strong>ਕਦਮ 3:</strong> ਬਾਇਓਮਾਸ ਖਰੀਦਦਾਰਾਂ ਦੀਆਂ ਸਰਗਰਮ ਲੋੜਾਂ ਵੇਖੋ:<br>
+                     • ਲੋੜੀਂਦੀ ਪਰਾਲੀ ਦੀ ਕਿਸਮ<br>
+                     • ਟਨ ਵਿੱਚ ਮਾਤਰਾ<br>
+                     • ਪ੍ਰਤੀ ਟਨ ਪ੍ਰਸਤਾਵਿਤ ਕੀਮਤ<br>
+                     • ਖਰੀਦਦਾਰ ਦਾ ਟਿਕਾਣਾ`,
+                action: { label: '📊 View Buyer Demands', path: '/seller/demands' }
+            },
+
+            received_bookings: {
+                keywords: ['received bookings', 'farmer bookings', 'received offers', 'my bookings', 'booking requests',
+                           'प्राप्त बुकिंग', 'ਕਿਸਾਨ ਬੁਕਿੰਗ', 'ਪ੍ਰਾਪਤ ਬੁਕਿੰਗ','view received bookings','my received bookings','received offers','received requests','received booking requests','bookings','offers','received offers','received booking requests','received requests','offer','received offers list','received booking requests list','received requests list',
+                        'प्राप्त बुकिंग','बुक',
+'किसान बुकिंग',
+'प्राप्त ऑफर',
+'प्राप्त प्रस्ताव',
+'मेरी बुकिंग',
+'बुकिंग अनुरोध',
+'बुकिंग अनुरोध देखें',
+'प्राप्त बुकिंग देखें',
+'मेरी प्राप्त बुकिंग',
+'प्राप्त ऑफर देखें',
+'प्राप्त अनुरोध',
+'प्राप्त बुकिंग अनुरोध',
+'बुकिंग',
+'ऑफर',
+'प्रस्ताव',
+'प्राप्त ऑफर सूची',
+'प्राप्त प्रस्ताव सूची',
+'प्राप्त बुकिंग अनुरोध सूची',
+'प्राप्त अनुरोध सूची',
+'मेरी बुकिंग सूची',
+'किसान की बुकिंग',
+'किसानों की बुकिंग',
+'किसान बुकिंग देखें',
+'प्राप्त बुकिंग की सूची',
+'प्राप्त बुकिंग अनुरोधों की सूची',
+'प्राप्त अनुरोधों की सूची',
+'प्राप्त ऑफरों की सूची',
+'प्राप्त प्रस्तावों की सूची',
+'ਪ੍ਰਾਪਤ ਬੁਕਿੰਗ',
+'ਕਿਸਾਨ ਬੁਕਿੰਗ',
+'ਪ੍ਰਾਪਤ ਆਫਰ',
+'ਪ੍ਰਾਪਤ ਪੇਸ਼ਕਸ਼',
+'ਮੇਰੀ ਬੁਕਿੰਗ',
+'ਬੁਕਿੰਗ ਬੇਨਤੀ',
+'ਬੁਕਿੰਗ ਬੇਨਤੀਆਂ',
+'ਬੁਕਿੰਗ ਬੇਨਤੀ ਵੇਖੋ',
+'ਪ੍ਰਾਪਤ ਬੁਕਿੰਗ ਵੇਖੋ',
+'ਮੇਰੀਆਂ ਪ੍ਰਾਪਤ ਬੁਕਿੰਗਾਂ',
+'ਪ੍ਰਾਪਤ ਆਫਰ ਵੇਖੋ',
+'ਪ੍ਰਾਪਤ ਬੇਨਤੀਆਂ',
+'ਪ੍ਰਾਪਤ ਬੁਕਿੰਗ ਬੇਨਤੀਆਂ',
+'ਬੁਕਿੰਗ',
+'ਆਫਰ',
+'ਪੇਸ਼ਕਸ਼',
+'ਪ੍ਰਾਪਤ ਆਫਰਾਂ ਦੀ ਸੂਚੀ',
+'ਪ੍ਰਾਪਤ ਪੇਸ਼ਕਸ਼ਾਂ ਦੀ ਸੂਚੀ',
+'ਪ੍ਰਾਪਤ ਬੁਕਿੰਗ ਬੇਨਤੀਆਂ ਦੀ ਸੂਚੀ',
+'ਪ੍ਰਾਪਤ ਬੇਨਤੀਆਂ ਦੀ ਸੂਚੀ',
+'ਮੇਰੀਆਂ ਬੁਕਿੰਗਾਂ ਦੀ ਸੂਚੀ',
+'ਕਿਸਾਨ ਦੀ ਬੁਕਿੰਗ',
+'ਕਿਸਾਨਾਂ ਦੀ ਬੁਕਿੰਗ',
+'ਕਿਸਾਨ ਬੁਕਿੰਗ ਵੇਖੋ',
+'ਪ੍ਰਾਪਤ ਬੁਕਿੰਗਾਂ ਦੀ ਸੂਚੀ',
+'ਪ੍ਰਾਪਤ ਬੇਨਤੀਆਂ ਦੀ ਸੂਚੀ',
+'received booking',
+'received bookings dekho',
+'meri received bookings',
+'farmer booking',
+'farmer bookings',
+'kisan booking',
+'kisan ki booking',
+'kisan bookings dekho',
+'received offer',
+'received offers',
+'received offer dekho',
+'meri booking',
+'meri bookings',
+'booking request',
+'booking requests',
+'received request',
+'received requests',
+'received booking request',
+'received booking requests',
+'received offers list',
+'received requests list',
+'received booking requests list',
+'booking list',
+'offer list',
+'bookings dekho',
+'offers dekho',
+'booking request dekho',
+'received booking vekho',
+'meri bookingan',
+'kisan booking',
+'kisan bookingan',
+'prapt booking',
+'prapt offers'],
+                en: `To view <strong>received farmer bookings and offers</strong>:<br><br>
+                     <strong>Step 1:</strong> Go to <strong>Seller Dashboard</strong><br>
+                     <strong>Step 2:</strong> Click on <strong>"Received Bookings"</strong><br>
+                     <strong>Step 3:</strong> Review all incoming requests:<br>
+                     • Farmer name and contact<br>
+                     • Equipment or stubble requested<br>
+                     • Quantity and dates<br>
+                     • Offered price<br>
+                     <strong>Step 4:</strong> For each booking, you can:<br>
+                     • <strong>Accept</strong> — Confirm the booking<br>
+                     • <strong>Reject</strong> — Decline with reason<br>
+                     • <strong>Counter-offer</strong> — Propose new terms<br><br>
+                     ✅ Accepted bookings move to "Fulfillment" for tracking.`,
+                hi: `<strong>प्राप्त किसान बुकिंग और ऑफ़र</strong> देखने के लिए:<br><br>
+                     <strong>स्टेप 1:</strong> <strong>विक्रेता डैशबोर्ड</strong> पर जाएं<br>
+                     <strong>स्टेप 2:</strong> <strong>"Received Bookings"</strong> पर क्लिक करें<br>
+                     <strong>स्टेप 3:</strong> सभी आने वाले अनुरोधों की समीक्षा करें:<br>
+                     • किसान का नाम और संपर्क<br>
+                     • अनुरोधित उपकरण या पराली<br>
+                     • मात्रा और तिथियाँ<br>
+                     • प्रस्तावित मूल्य<br>
+                     <strong>स्टेप 4:</strong> प्रत्येक बुकिंग के लिए आप कर सकते हैं:<br>
+                     • <strong>स्वीकार</strong> — बुकिंग की पुष्टि करें<br>
+                     • <strong>अस्वीकार</strong> — कारण के साथ अस्वीकार करें<br>
+                     • <strong>काउंटर-ऑफ़र</strong> — नए प्रस्ताव दें`,
+                pa: `<strong>ਪ੍ਰਾਪਤ ਕਿਸਾਨ ਬੁਕਿੰਗ ਅਤੇ ਪੇਸ਼ਕਸ਼ਾਂ</strong> ਵੇਖਣ ਲਈ:<br><br>
+                     <strong>ਕਦਮ 1:</strong> <strong>ਵਿਕਰੇਤਾ ਡੈਸ਼ਬੋਰਡ</strong> 'ਤੇ ਜਾਓ<br>
+                     <strong>ਕਦਮ 2:</strong> <strong>"Received Bookings"</strong> 'ਤੇ ਕਲਿੱਕ ਕਰੋ<br>
+                     <strong>ਕਦਮ 3:</strong> ਸਾਰੇ ਆ ਰਹੇ ਅਨੁਰੋਧਾਂ ਦੀ ਸਮੀਖਿਆ ਕਰੋ:<br>
+                     • ਕਿਸਾਨ ਦਾ ਨਾਮ ਅਤੇ ਸੰਪਰਕ<br>
+                     • ਬੇਨਤੀ ਕੀਤਾ ਉਪਕਰਣ ਜਾਂ ਪਰਾਲੀ<br>
+                     • ਮਾਤਰਾ ਅਤੇ ਤਾਰੀਖਾਂ<br>
+                     • ਪ੍ਰਸਤਾਵਿਤ ਕੀਮਤ<br>
+                     <strong>ਕਦਮ 4:</strong> ਹਰ ਬੁਕਿੰਗ ਲਈ ਤੁਸੀਂ ਕਰ ਸਕਦੇ ਹੋ:<br>
+                     • <strong>ਸਵੀਕਾਰ</strong> — ਬੁਕਿੰਗ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ<br>
+                     • <strong>ਅਸਵੀਕਾਰ</strong> — ਕਾਰਨ ਨਾਲ ਅਸਵੀਕਾਰ ਕਰੋ<br>
+                     • <strong>ਕਾਊਂਟਰ-ਆਫਰ</strong> — ਨਵੀਆਂ ਸ਼ਰਤਾਂ ਪ੍ਰਸਤਾਵਿਤ ਕਰੋ`,
+                action: { label: '📥 View Bookings', path: '/seller/bookings' }
+            },
+
+            // ═══════════════════════════════════════
+            // 📚 EXISTING DOMAIN KNOWLEDGE
+            // ═══════════════════════════════════════
+
+            pm_pranam: {
+                keywords: ['pm pranam', 'pranam', 'incentive', 'पीएम प्रणाम', 'ਪ੍ਰਣਾਮ',
+                    'पीएम प्रणाम',
+'पीएम-प्रणाम',
+'पीएम प्रणाम योजना',
+'प्रणाम',
+'प्रोत्साहन',
+'प्रोत्साहन राशि',
+'प्रोत्साहन योजना',
+'प्रोत्साहन लाभ',
+'प्रोत्साहन राशि की जानकारी',
+'पीएम प्रणाम प्रोत्साहन',
+'ਪੀਐਮ ਪ੍ਰਣਾਮ',
+'ਪੀਐਮ-ਪ੍ਰਣਾਮ',
+'ਪੀਐਮ ਪ੍ਰਣਾਮ ਯੋਜਨਾ',
+'ਪ੍ਰਣਾਮ',
+'ਪ੍ਰੋਤਸਾਹਨ',
+'ਪ੍ਰੋਤਸਾਹਨ ਰਾਸ਼ੀ',
+'ਪ੍ਰੋਤਸਾਹਨ ਯੋਜਨਾ',
+'ਪ੍ਰੋਤਸਾਹਨ ਲਾਭ',
+'ਪ੍ਰੋਤਸਾਹਨ ਰਾਸ਼ੀ ਦੀ ਜਾਣਕਾਰੀ',
+'ਪੀਐਮ ਪ੍ਰਣਾਮ ਪ੍ਰੋਤਸਾਹਨ',
+'pm pranam yojana',
+'pm pranam scheme',
+'pranam yojana',
+'pranam scheme',
+'pranam incentive',
+'incentive amount',
+'incentive scheme',
+'pranam ka incentive',
+'pranam ki jankari',
+'pm pranam ki jankari',
+'pm pranam incentive',
+'pm pranam scheme',
+                ],
+                en: `🎁 <strong>PM-PRANAM Scheme</strong><br><br>
+                     Government incentive for sustainable crop residue management.<br><br>
+                     <strong>Benefits:</strong><br>
+                     • ₹1,000 per acre for using machinery<br>
+                     • 50% to farmer, 25% to panchayat, 25% to state<br><br>
+                     <strong>Eligible Machinery:</strong> Happy Seeder, Baler, Mulcher, Rotavator`,
+                hi: `🎁 <strong>PM-PRANAM योजना</strong><br><br>
+                     फसल अवशेष प्रबंधन के लिए सरकार की प्रोत्साहन राशि।<br><br>
+                     <strong>लाभ:</strong><br>
+                     • मशीनरी उपयोग पर ₹1,000 प्रति एकड़<br>
+                     • 50% किसान को, 25% पंचायत को, 25% राज्य को`,
+                pa: `🎁 <strong>PM-PRANAM ਯੋਜਨਾ</strong><br><br>
+                     ਫਸਲ ਰਹਿੰਦ-ਖੂੰਹਦ ਪ੍ਰਬੰਧਨ ਲਈ ਸਰਕਾਰੀ ਇਨਾਮ।<br><br>
+                     <strong>ਲਾਭ:</strong><br>
+                     • ਮਸ਼ੀਨਰੀ ਵਰਤਣ 'ਤੇ ₹1,000 ਪ੍ਰਤੀ ਏਕੜ<br>
+                     • 50% ਕਿਸਾਨ ਨੂੰ, 25% ਪੰਚਾਇਤ ਨੂੰ, 25% ਰਾਜ ਨੂੰ`,
+                action: { label: '🚜 Rent Machinery', path: '/farmer/marketplace' }
+            },
+
+            penalty: {
+                keywords: ['penalty', 'fine', 'punishment', 'burning', 'jail', 'जुर्माना', 'ਸਜ਼ਾ',
+                    'जुर्माना',
+'दंड',
+'सज़ा',
+'सजा',
+'जुर्माना कितना है',
+'जुर्माने की राशि',
+'दंड की राशि',
+'दंड का प्रावधान',
+'सजा का प्रावधान',
+'जेल',
+'जेल की सजा',
+'पराली जलाना',
+'पराली जलाने पर जुर्माना',
+'पराली जलाने की सजा',
+'पराली जलाने पर दंड',
+'फसल जलाना',
+'फसल अवशेष जलाना',
+'ਸਜ਼ਾ',
+'ਸਜਾ',
+'ਜੁਰਮਾਨਾ',
+'ਦੰਡ',
+'ਜੁਰਮਾਨੇ ਦੀ ਰਕਮ',
+'ਸਜ਼ਾ ਦੀ ਰਕਮ',
+'ਦੰਡ ਦੀ ਰਕਮ',
+'ਸਜ਼ਾ ਦਾ ਪ੍ਰਾਵਧਾਨ',
+'ਜੁਰਮਾਨਾ ਕਿੰਨਾ ਹੈ',
+'ਜੇਲ੍ਹ',
+'ਜੇਲ੍ਹ ਦੀ ਸਜ਼ਾ',
+'ਪਰਾਲੀ ਸਾੜਨਾ',
+'ਪਰਾਲੀ ਸਾੜਨ ਤੇ ਜੁਰਮਾਨਾ',
+'ਪਰਾਲੀ ਸਾੜਨ ਦੀ ਸਜ਼ਾ',
+'ਪਰਾਲੀ ਸਾੜਨ ਤੇ ਦੰਡ',
+'ਫਸਲ ਸਾੜਨਾ',
+'ਫਸਲ ਦੀ ਰਹਿੰਦ-ਖੂੰਹਦ ਸਾੜਨਾ',
+'penalty kitni hai',
+'fine kitna hai',
+'jurmana kitna hai',
+'jurmane ki rashi',
+'saza kya hai',
+'saza kitni hai',
+'dand kya hai',
+'jail ki saza',
+'parali jalana',
+'parali jalane par jurmana',
+'parali jalane ki saza',
+'parali jalane par dand',
+'fasal jalana',
+'fasal avshesh jalana',
+'parali burning penalty',
+'parali burning fine',
+'parali burning punishment'
+                ],
+                en: `⚖️ <strong>Penalty for Stubble Burning</strong><br><br>
+                     • First offense: ₹2,500 fine<br>
+                     • Repeat: ₹5,000 - ₹15,000 fine<br>
+                     • Severe cases: Up to 2 years jail<br><br>
+                     💡 It is better to use machinery or sell straw through our platform.`,
+                hi: `⚖️ <strong>पराली जलाने पर जुर्माना</strong><br><br>
+                     • पहली बार: ₹2,500 जुर्माना<br>
+                     • दोबारा: ₹5,000 - ₹15,000 जुर्माना<br>
+                     • गंभीर मामलों में: 2 साल तक जेल`,
+                pa: `⚖️ <strong>ਪਰਾਲੀ ਸਾੜਨ 'ਤੇ ਜੁਰਮਾਨਾ</strong><br><br>
+                     • ਪਹਿਲੀ ਵਾਰ: ₹2,500 ਜੁਰਮਾਨਾ<br>
+                     • ਦੁਬਾਰਾ: ₹5,000 - ₹15,000 ਜੁਰਮਾਨਾ<br>
+                     • ਗੰਭੀਰ ਮਾਮਲਿਆਂ ਵਿੱਚ: 2 ਸਾਲ ਤੱਕ ਜੇਲ੍ਹ`,
+                action: { label: '🌾 Explore Alternatives', path: '/farmer/dashboard' }
+            },
+
+            machinery_info: {
+                keywords: ['machinery', 'machine', 'happy seeder', 'baler', 'mulcher', 'rotavator', 'मशीन', 'ਮਸ਼ੀਨ','machinery info','available machinery','मशीनरी',
+'मशीन',
+'हैप्पी सीडर',
+'हैप्पी सीडर मशीन',
+'बेलर',
+'मल्चर',
+'रोटावेटर',
+'मशीनरी की जानकारी',
+'मशीन की जानकारी',
+'उपलब्ध मशीनरी',
+'उपलब्ध मशीनें',
+'उपलब्ध मशीन',
+'मशीनें उपलब्ध हैं',
+'कौन सी मशीनें उपलब्ध हैं',
+'कृषि मशीनरी',
+'कृषि मशीनों की जानकारी',
+'खेती की मशीनें',
+'खेती के उपकरण',
+'ਮਸ਼ੀਨਰੀ',
+'ਮਸ਼ੀਨ',
+'ਹੈਪੀ ਸੀਡਰ',
+'ਹੈਪੀ ਸੀਡਰ ਮਸ਼ੀਨ',
+'ਬੇਲਰ',
+'ਮਲਚਰ',
+'ਰੋਟਾਵੇਟਰ',
+'ਮਸ਼ੀਨਰੀ ਦੀ ਜਾਣਕਾਰੀ',
+'ਮਸ਼ੀਨ ਦੀ ਜਾਣਕਾਰੀ',
+'ਉਪਲਬਧ ਮਸ਼ੀਨਰੀ',
+'ਉਪਲਬਧ ਮਸ਼ੀਨਾਂ',
+'ਉਪਲਬਧ ਮਸ਼ੀਨ',
+'ਮਸ਼ੀਨਾਂ ਉਪਲਬਧ ਹਨ',
+'ਕਿਹੜੀਆਂ ਮਸ਼ੀਨਾਂ ਉਪਲਬਧ ਹਨ',
+'ਖੇਤੀਬਾੜੀ ਮਸ਼ੀਨਰੀ',
+'ਖੇਤੀਬਾੜੀ ਮਸ਼ੀਨਾਂ ਦੀ ਜਾਣਕਾਰੀ',
+'ਖੇਤੀ ਦੀਆਂ ਮਸ਼ੀਨਾਂ',
+'ਖੇਤੀ ਦੇ ਉਪਕਰਣ',
+'machinery ki info',
+'machine ki info',
+'machinery ki jankari',
+'machine ki jankari',
+'available machines',
+'machines available',
+'kaunsi machine available hai',
+'kaun si machine available hai',
+'kheti ki machine',
+'kheti ki machines',
+'kheti ke equipment',
+'happy seeder machine',
+'baler machine',
+'mulcher machine',
+'rotavator machine',
+'machine info',
+'machine availability',
+'machinery availability',
+'machine vekho',
+'machine di jankari',
+'machinery di jankari',
+'kehri machine available hai'],
+                en: `🚜 <strong>Available Machinery on CSBP</strong><br><br>
+                     <strong>1. Happy Seeder</strong> (₹1,200-1,800/acre)<br>
+                     <strong>2. Super Seeder</strong> (₹1,500-2,200/acre)<br>
+                     <strong>3. Baler</strong> (₹1,000-1,500/acre)<br>
+                     <strong>4. Mulcher</strong> (₹800-1,200/acre)<br>
+                     <strong>5. Rotavator</strong> (₹900-1,400/acre)<br><br>
+                     💡 All machinery is eligible for PM-PRANAM incentive!`,
+                hi: `🚜 <strong>CSBP पर उपलब्ध मशीनरी</strong><br><br>
+                     <strong>1. हैपी सीडर</strong> (₹1,200-1,800/एकड़)<br>
+                     <strong>2. सुपर सीडर</strong> (₹1,500-2,200/एकड़)<br>
+                     <strong>3. बेलर</strong> (₹1,000-1,500/एकड़)<br>
+                     <strong>4. मल्चर</strong> (₹800-1,200/एकड़)<br>
+                     <strong>5. रोटावेटर</strong> (₹900-1,400/एकड़)`,
+                pa: `🚜 <strong>CSBP 'ਤੇ ਉਪਲਬਧ ਮਸ਼ੀਨਰੀ</strong><br><br>
+                     <strong>1. ਹੈਪੀ ਸੀਡਰ</strong> (₹1,200-1,800/ਏਕੜ)<br>
+                     <strong>2. ਸੁਪਰ ਸੀਡਰ</strong> (₹1,500-2,200/ਏਕੜ)<br>
+                     <strong>3. ਬੇਲਰ</strong> (₹1,000-1,500/ਏਕੜ)<br>
+                     <strong>4. ਮਲਚਰ</strong> (₹800-1,200/ਏਕੜ)<br>
+                     <strong>5. ਰੋਟਾਵੇਟਰ</strong> (₹900-1,400/ਏਕੜ)`,
+                action: { label: '🔍 Browse Marketplace', path: '/farmer/marketplace' }
+            },
+
+            buyer_info: {
+                keywords: ['buyer', 'who buys', 'types of buyers', 'खरीददार', 'ਖਰੀਦਦਾਰ','buyer info',
+                    'खरीदार',
+'खरीददार',
+'कौन खरीदता है',
+'कौन खरीदते हैं',
+'किस प्रकार के खरीदार',
+'खरीदारों के प्रकार',
+'खरीदार की जानकारी',
+'खरीदारों की जानकारी',
+'खरीदार के बारे में जानकारी',
+'खरीदार कौन हैं',
+'कौन-कौन खरीदता है',
+'ਖਰੀਦਦਾਰ',
+'ਕੌਣ ਖਰੀਦਦਾ ਹੈ',
+'ਕੌਣ ਖਰੀਦਦੇ ਹਨ',
+'ਖਰੀਦਦਾਰਾਂ ਦੀਆਂ ਕਿਸਮਾਂ',
+'ਖਰੀਦਦਾਰਾਂ ਦੇ ਪ੍ਰਕਾਰ',
+'ਖਰੀਦਦਾਰ ਦੀ ਜਾਣਕਾਰੀ',
+'ਖਰੀਦਦਾਰਾਂ ਦੀ ਜਾਣਕਾਰੀ',
+'ਖਰੀਦਦਾਰ ਬਾਰੇ ਜਾਣਕਾਰੀ',
+'ਖਰੀਦਦਾਰ ਕੌਣ ਹਨ',
+'ਕੌਣ-ਕੌਣ ਖਰੀਦਦਾ ਹੈ',
+'buyer kaun hai',
+'buyer kaun hain',
+'kaun kharidta hai',
+'kaun kharidte hain',
+'buyers kaun hain',
+'buyers ke types',
+'buyer ke types',
+'buyers ki types',
+'buyer ki info',
+'buyer ki jankari',
+'buyers ki jankari',
+'buyer information',
+'buyer info',
+'kharidaar kaun hai',
+'kharidaar kaun hain',
+'kharidaar ki jankari',
+'kharidaaron ki jankari',
+'kharidaaran di jankari'
+                ],
+                en: `💰 <strong>Types of Biomass Buyers on CSBP</strong><br><br>
+                     • <strong>Biofuel Plants:</strong> ₹2,500-3,500/tonne<br>
+                     • <strong>Paper Mills:</strong> ₹2,000-3,000/tonne<br>
+                     • <strong>Composting Units:</strong> ₹1,500-2,500/tonne<br>
+                     • <strong>Animal Feed Producers:</strong> ₹2,000-2,800/tonne<br>
+                     • <strong>Thermal Power Plants:</strong> ₹1,800-2,500/tonne`,
+                hi: `💰 <strong>CSBP पर बायोमास खरीददारों के प्रकार</strong><br><br>
+                     • <strong>बायोफ्यूल प्लांट:</strong> ₹2,500-3,500/टन<br>
+                     • <strong>कागज़ मिल:</strong> ₹2,000-3,000/टन<br>
+                     • <strong>कम्पोस्ट इकाई:</strong> ₹1,500-2,500/टन<br>
+                     • <strong>पशु आहार उत्पादक:</strong> ₹2,000-2,800/टन`,
+                pa: `💰 <strong>CSBP 'ਤੇ ਬਾਇਓਮਾਸ ਖਰੀਦਦਾਰਾਂ ਦੀਆਂ ਕਿਸਮਾਂ</strong><br><br>
+                     • <strong>ਬਾਇਓਫਿਊਲ ਪਲਾਂਟ:</strong> ₹2,500-3,500/ਟਨ<br>
+                     • <strong>ਕਾਗਜ਼ ਮਿੱਲ:</strong> ₹2,000-3,000/ਟਨ<br>
+                     • <strong>ਕੰਪੋਸਟ ਯੂਨਿਟ:</strong> ₹1,500-2,500/ਟਨ<br>
+                     • <strong>ਪਸ਼ੂ ਆਹਾਰ ਉਤਪਾਦਕ:</strong> ₹2,000-2,800/ਟਨ`,
+                action: { label: '💰 Find Buyers', path: '/farmer/sell-stubble' }
+            },
+
+            calculate: {
+                keywords: ['calculate', 'estimate', 'how much', 'कितना', 'ਗਿਣ','analyze','analyse','गणना',
+'गणना करें',
+'गणना करना',
+'हिसाब',
+'हिसाब करें',
+'अनुमान',
+'अनुमान लगाएं',
+'अनुमानित',
+'कितना',
+'कितनी',
+'कितने',
+'कितना होगा',
+'कितनी होगी',
+'कितने होंगे',
+'कितना खर्च होगा',
+'कितनी लागत होगी',
+'विश्लेषण',
+'विश्लेषण करें',
+'विश्लेषण करना',
+'जांच और विश्लेषण',
+'ਗਿਣ',
+'ਗਿਣੋ',
+'ਗਣਨਾ',
+'ਗਣਨਾ ਕਰੋ',
+'ਹਿਸਾਬ',
+'ਹਿਸਾਬ ਕਰੋ',
+'ਅੰਦਾਜ਼ਾ',
+'ਅੰਦਾਜ਼ਾ ਲਗਾਓ',
+'ਕਿੰਨਾ',
+'ਕਿੰਨੀ',
+'ਕਿੰਨੇ',
+'ਕਿੰਨਾ ਹੋਵੇਗਾ',
+'ਕਿੰਨੀ ਹੋਵੇਗੀ',
+'ਕਿੰਨੇ ਹੋਣਗੇ',
+'ਕਿੰਨਾ ਖਰਚਾ ਹੋਵੇਗਾ',
+'ਕਿੰਨੀ ਲਾਗਤ ਹੋਵੇਗੀ',
+'ਵਿਸ਼ਲੇਸ਼ਣ',
+'ਵਿਸ਼ਲੇਸ਼ਣ ਕਰੋ',
+'ਵਿਸ਼ਲੇਸ਼ਣ ਕਰਨਾ',
+'calculate karo',
+'calculation karo',
+'hisab karo',
+'hisab lagao',
+'kitna',
+'kitni',
+'kitne',
+'kitna hoga',
+'kitni hogi',
+'kitne honge',
+'kitna kharcha hoga',
+'kitni cost hogi',
+'andaza lagao',
+'andaza batao',
+'estimate karo',
+'analyze karo',
+'analyse karo',
+'analysis karo',
+'jankari ka analysis'],
+                en: (acres) => {
+                    if (!acres) return "🤔 Please specify acres. Example: <em>'Calculate for 10 acres'</em>";
+                    const straw = (acres * 1.8).toFixed(2);
+                    const cost = Math.round(acres * 1500);
+                    const earning = Math.round(straw * 3000);
+                    return `📊 <strong>Calculation for ${acres} acres:</strong><br><br>
+                        🌾 <strong>Straw:</strong> ${straw} tonnes<br>
+                        🚜 <strong>Machinery Cost:</strong> ₹${cost.toLocaleString()}<br>
+                        💰 <strong>Sell Straw:</strong> ₹${earning.toLocaleString()}<br>
+                        💡 <strong>Best:</strong> Sell to biofuel plant!`;
+                },
+                hi: (acres) => {
+                    if (!acres) return "🤔 कृपया एकड़ बताएं। उदाहरण: <em>'10 एकड़ के लिए गणना करें'</em>";
+                    const straw = (acres * 1.8).toFixed(2);
+                    const cost = Math.round(acres * 1500);
+                    const earning = Math.round(straw * 3000);
+                    return `📊 <strong>${acres} एकड़ की गणना:</strong><br><br>
+                        🌾 <strong>पराली:</strong> ${straw} टन<br>
+                        🚜 <strong>मशीनरी लागत:</strong> ₹${cost.toLocaleString()}<br>
+                        💰 <strong>बेचने पर:</strong> ₹${earning.toLocaleString()}`;
+                },
+                pa: (acres) => {
+                    if (!acres) return "🤔 ਕਿਰਪਾ ਕਰਕੇ ਏਕੜ ਦੱਸੋ। ਉਦਾਹਰਨ: <em>'10 ਏਕੜ ਲਈ ਗਿਣੋ'</em>";
+                    const straw = (acres * 1.8).toFixed(2);
+                    const cost = Math.round(acres * 1500);
+                    const earning = Math.round(straw * 3000);
+                    return `📊 <strong>${acres} ਏਕੜ ਦੀ ਗਿਣਤੀ:</strong><br><br>
+                        🌾 <strong>ਪਰਾਲੀ:</strong> ${straw} ਟਨ<br>
+                        🚜 <strong>ਮਸ਼ੀਨਰੀ ਖਰਚਾ:</strong> ₹${cost.toLocaleString()}<br>
+                        💰 <strong>ਵੇਚਣ 'ਤੇ:</strong> ₹${earning.toLocaleString()}`;
+                }
+            },
+
+            weather: {
+                keywords: ['weather', 'temperature', 'rain', 'forecast', 'मौसम', 'ਮੌਸਮ','मौसम','बारिश','तापमान','मौसम की जानकारी','मौसम का पूर्वानुमान','मौसम पूर्वानुमान','आज का मौसम','आज का तापमान','बारिश की जानकारी','बारिश का पूर्वानुमान','वर्षा','वर्षा की जानकारी','बारिश कब होगी','बारिश होगी क्या','मौसम कैसा है',
+'मौसम की जानकारी',
+'आज का मौसम',
+'मौसम का पूर्वानुमान',
+'मौसम पूर्वानुमान',
+'तापमान',
+'आज का तापमान',
+'बारिश',
+'बारिश की जानकारी',
+'बारिश का पूर्वानुमान',
+'वर्षा',
+'वर्षा की जानकारी',
+'बारिश कब होगी',
+'बारिश होगी क्या',
+'मौसम कैसा है',
+'ਮੌਸਮ',
+'ਮੌਸਮ ਦੀ ਜਾਣਕਾਰੀ',
+'ਅੱਜ ਦਾ ਮੌਸਮ',
+'ਮੌਸਮ ਦੀ ਭਵਿੱਖਬਾਣੀ',
+'ਮੌਸਮ ਪੂਰਵ ਅਨੁਮਾਨ',
+'ਤਾਪਮਾਨ',
+'ਅੱਜ ਦਾ ਤਾਪਮਾਨ',
+'ਮੀਂਹ',
+'ਮੀਂਹ ਦੀ ਜਾਣਕਾਰੀ',
+'ਮੀਂਹ ਦੀ ਭਵਿੱਖਬਾਣੀ',
+'ਵਰਖਾ',
+'ਵਰਖਾ ਦੀ ਜਾਣਕਾਰੀ',
+'ਮੀਂਹ ਕਦੋਂ ਪਵੇਗਾ',
+'ਮੀਂਹ ਪਵੇਗਾ ਕੀ',
+'ਮੌਸਮ ਕਿਹੋ ਜਿਹਾ ਹੈ',
+'mausam',
+'mausam ki jankari',
+'aaj ka mausam',
+'mausam kaisa hai',
+'mausam ka forecast',
+'temperature',
+'aaj ka temperature',
+'baarish',
+'barish',
+'baarish ki jankari',
+'baarish kab hogi',
+'baarish hogi kya',
+'weather ki jankari',
+'weather forecast',
+'mousam',
+'mausam vekho',
+'mausam di jankari',
+'aaj da mausam',
+'mausam kiven hai',
+'meeh',
+'meeh di jankari',
+'meeh pavega'],
+                en: `🌤️ <strong>Weather (Ludhiana, Punjab)</strong><br><br>
+                     • Temperature: 28°C<br>• Partly Cloudy<br>• Humidity: 65%<br>• Good for harvesting!`,
+                hi: `🌤️ <strong>मौसम (लुधियाना, पंजाब)</strong><br><br>
+                     • तापमान: 28°C<br>• आंशिक बादल<br>• आर्द्रता: 65%`,
+                pa: `🌤️ <strong>ਮੌਸਮ (ਲੁਧਿਆਣਾ, ਪੰਜਾਬ)</strong><br><br>
+                     • ਤਾਪਮਾਨ: 28°C<br>• ਅੰਸ਼ਕ ਬੱਦਲ<br>• ਨਮੀ: 65%`
+            },
+
+            
+            // ═══════════════════════════════════════
+// 👋 GREETINGS & FAREWELLS
+// ═══════════════════════════════════════
+
+greeting: {
+    keywords: [
+        // English
+        'hello', 'hi', 'hey', 'hii', 'hiii',
+        'good morning', 'morning',
+        'good afternoon', 'afternoon',
+        'good evening', 'evening',
+        'good night', 'night',
+        'bye', 'goodbye', 'good bye',
+        'see you', 'see you later', 'take care',
+
+        // Hindi
+        'नमस्ते',
+        'नमस्कार',
+        'हेलो',
+        'हाय',
+        'सुप्रभात',
+        'शुभ प्रभात',
+        'शुभ दोपहर',
+        'शुभ संध्या',
+        'शुभ रात्रि',
+        'अलविदा',
+        'फिर मिलेंगे',
+        'फिर मिलते हैं',
+        'अपना ख्याल रखना',
+        'ख्याल रखना',
+
+        // Punjabi
+        'ਸਤ ਸ੍ਰੀ ਅਕਾਲ',
+        'ਨਮਸਤੇ',
+        'ਨਮਸਕਾਰ',
+        'ਹੈਲੋ',
+        'ਹਾਇ',
+        'ਸ਼ੁਭ ਸਵੇਰ',
+        'ਸ਼ੁਭ ਦੁਪਹਿਰ',
+        'ਸ਼ੁਭ ਸ਼ਾਮ',
+        'ਸ਼ੁਭ ਰਾਤ',
+        'ਅਲਵਿਦਾ',
+        'ਫਿਰ ਮਿਲਾਂਗੇ',
+        'ਫਿਰ ਮਿਲਦੇ ਹਾਂ',
+        'ਆਪਣਾ ਖਿਆਲ ਰੱਖਣਾ',
+
+        // Hinglish
+        'namaste',
+        'namaskar',
+        'hello ji',
+        'hi ji',
+        'hey ji',
+        'suprabhat',
+        'shubh prabhat',
+        'shubh dopahar',
+        'shubh sandhya',
+        'shubh ratri',
+        'shubh raatri',
+        'good morning ji',
+        'good afternoon ji',
+        'good evening ji',
+        'good night ji',
+        'bye ji',
+        'phir milenge',
+        'phir milte hain',
+        'apna khayal rakhna',
+        'khayal rakhna'
+    ],
+
+    en: `👋 <strong>Hello!</strong><br><br>
+         Welcome to <strong>CSBP (Crop Stubble Burning Prevention)</strong>.<br><br>
+         I can help you with:<br>
+         • Farm and land plot registration<br>
+         • Agricultural machinery rentals<br>
+         • Stubble and biomass buyers<br>
+         • Marketplace listings<br>
+         • Weather and recommendations<br>
+         • Other CSBP website features<br><br>
+         How can I help you today?`,
+
+    hi: `👋 <strong>नमस्ते!</strong><br><br>
+         <strong>CSBP (फसल पराली जलाने की रोकथाम)</strong> में आपका स्वागत है।<br><br>
+         मैं आपकी इन कार्यों में सहायता कर सकता हूँ:<br>
+         • खेत और भूमि प्लॉट पंजीकरण<br>
+         • कृषि मशीनरी किराए पर लेना<br>
+         • पराली और बायोमास खरीदारों से जुड़ना<br>
+         • मार्केटप्लेस लिस्टिंग देखना<br>
+         • मौसम और सुझाव प्राप्त करना<br>
+         • CSBP वेबसाइट की अन्य सुविधाएँ<br><br>
+         आज मैं आपकी कैसे मदद कर सकता हूँ?`,
+
+    pa: `👋 <strong>ਸਤ ਸ੍ਰੀ ਅਕਾਲ!</strong><br><br>
+         <strong>CSBP (ਫਸਲ ਦੀ ਪਰਾਲੀ ਸਾੜਨ ਦੀ ਰੋਕਥਾਮ)</strong> ਵਿੱਚ ਤੁਹਾਡਾ ਸਵਾਗਤ ਹੈ।<br><br>
+         ਮੈਂ ਤੁਹਾਡੀ ਇਨ੍ਹਾਂ ਕੰਮਾਂ ਵਿੱਚ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ:<br>
+         • ਖੇਤ ਅਤੇ ਜ਼ਮੀਨ ਪਲਾਟ ਰਜਿਸਟ੍ਰੇਸ਼ਨ<br>
+         • ਖੇਤੀਬਾੜੀ ਮਸ਼ੀਨਰੀ ਕਿਰਾਏ 'ਤੇ ਲੈਣਾ<br>
+         • ਪਰਾਲੀ ਅਤੇ ਬਾਇਓਮਾਸ ਖਰੀਦਦਾਰਾਂ ਨਾਲ ਜੁੜਨਾ<br>
+         • ਮਾਰਕੀਟਪਲੇਸ ਲਿਸਟਿੰਗਾਂ ਦੇਖਣਾ<br>
+         • ਮੌਸਮ ਅਤੇ ਸੁਝਾਅ ਪ੍ਰਾਪਤ ਕਰਨਾ<br>
+         • CSBP ਵੈੱਬਸਾਈਟ ਦੀਆਂ ਹੋਰ ਸਹੂਲਤਾਂ<br><br>
+         ਅੱਜ ਮੈਂ ਤੁਹਾਡੀ ਕਿਵੇਂ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ?`,
+
+    action: { label: '🏠 Go to Dashboard', path: '/' }
+},
+
+// ═══════════════════════════════════════
+// 👋 GOODBYE / FAREWELL
+// ═══════════════════════════════════════
+
+goodbye: {
+    keywords: [
+        // English
+        'bye',
+        'goodbye',
+        'good bye',
+        'see you',
+        'see you later',
+        'take care',
+
+        // Hindi
+        'अलविदा',
+        'फिर मिलेंगे',
+        'फिर मिलते हैं',
+        'अपना ख्याल रखना',
+        'ख्याल रखना',
+
+        // Punjabi
+        'ਅਲਵਿਦਾ',
+        'ਫਿਰ ਮਿਲਾਂਗੇ',
+        'ਫਿਰ ਮਿਲਦੇ ਹਾਂ',
+        'ਆਪਣਾ ਖਿਆਲ ਰੱਖਣਾ',
+
+        // Hinglish
+        'bye ji',
+        'phir milenge',
+        'phir milte hain',
+        'apna khayal rakhna',
+        'khayal rakhna'
+    ],
+
+    en: `👋 <strong>Goodbye!</strong><br><br>
+         Thank you for using <strong>CSBP</strong>.<br>
+         Take care and feel free to come back anytime! 🌱`,
+
+    hi: `👋 <strong>अलविदा!</strong><br><br>
+         <strong>CSBP</strong> का उपयोग करने के लिए धन्यवाद।<br>
+         अपना ख्याल रखें और जब चाहें वापस आएँ! 🌱`,
+
+    pa: `👋 <strong>ਅਲਵਿਦਾ!</strong><br><br>
+         <strong>CSBP</strong> ਦੀ ਵਰਤੋਂ ਕਰਨ ਲਈ ਧੰਨਵਾਦ।<br>
+         ਆਪਣਾ ਖਿਆਲ ਰੱਖੋ ਅਤੇ ਜਦੋਂ ਚਾਹੋ ਵਾਪਸ ਆਓ! 🌱`,
+
+    action: { label: '🏠 Go to Home', path: '/' }
+},
+
+            // ═══════════════════════════════════════
+            // 🤔 DEFAULT FALLBACK
+            // ═══════════════════════════════════════
+            default: {
+                en: `I apologize, but I do not have information regarding that topic.<br><br>
+                     I am designed specifically to assist you with navigating the <strong>CSBP (Crop Stubble Burning Prevention) website</strong>.<br><br>
+                     I can help you with:<br>
+                     • Farm and land plot registration<br>
+                     • Agricultural machinery rentals<br>
+                     • Connecting with residue buyers<br><br>
+                    `,
+                hi: `क्षमा करें, मेरे पास इस विषय की जानकारी नहीं है।<br><br>
+                     मैं आपको विशेष रूप से <strong>CSBP वेबसाइट</strong> नेविगेट करने में सहायता प्रदान करने के लिए डिज़ाइन किया गया हूँ।<br><br>
+                     मैं आपकी निम्नलिखित में सहायता कर सकता हूँ:<br>
+                     • खेत और भूमि प्लॉट पंजीकरण<br>
+                     • कृषि मशीनरी किराया<br>
+                     • पराली खरीददारों से जुड़ना<br><br>
+                    `,
+                pa: `ਮਾਫ਼ ਕਰਨਾ, ਮੇਰੇ ਕੋਲ ਇਸ ਵਿਸ਼ੇ ਬਾਰੇ ਜਾਣਕਾਰੀ ਨਹੀਂ ਹੈ।<br><br>
+                     ਮੈਨੂੰ ਵਿਸ਼ੇਸ਼ ਤੌਰ 'ਤੇ ਤੁਹਾਨੂੰ <strong>CSBP ਵੈੱਬਸਾਈਟ</strong> 'ਤੇ ਨੈਵੀਗੇਟ ਕਰਨ ਵਿੱਚ ਸਹਾਇਤਾ ਕਰਨ ਲਈ ਤਿਆਰ ਕੀਤਾ ਗਿਆ ਹੈ।<br><br>
+                     ਮੈਂ ਹੇਠ ਲਿਖਿਆਂ ਵਿੱਚ ਤੁਹਾਡੀ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ:<br>
+                     • ਖੇਤ ਅਤੇ ਜ਼ਮੀਨ ਪਲਾਟ ਰਜਿਸਟ੍ਰੇਸ਼ਨ<br>
+                     • ਖੇਤੀਬਾੜੀ ਮਸ਼ੀਨਰੀ ਕਿਰਾਇਆ<br>
+                     • ਪਰਾਲੀ ਖਰੀਦਦਾਰਾਂ ਨਾਲ ਜੁੜਨਾ<br><br>
+                     `,
+                action: { label: '📧 Contact Support', path: '/contact' }
+            }
+        };    
+        
+
+        // Welcome message per language
+        function getWelcomeMessage() {
+            const msgs = {
+                en: `👋 <strong>Namaste!</strong> I'm your navigation assistant.<br><br>
+                     I can help you with:<br>
+                     • 🧭 Finding pages<br>
+                     • 📚 Explaining schemes<br>
+                     • 🧮 Calculating earnings<br>
+                     • 🌤️ Weather info<br><br>
+                     💡 <em>Type in English, Hindi, or Punjabi!</em>`,
+                hi: `👋 <strong>नमस्ते!</strong> मैं आपका नेविगेशन सहायक हूं।<br><br>
+                     मैं आपकी मदद कर सकता हूं:<br>
+                     • 🧭 पेज खोजने में<br>
+                     • 📚 योजनाएं समझाने में<br>
+                     • 🧮 कमाई की गणना में<br>
+                     • 🌤️ मौसम की जानकारी<br><br>
+                     💡 <em>English, Hindi, या Punjabi में टाइप करें!</em>`,
+                pa: `👋 <strong>ਸਤ ਸ੍ਰੀ ਅਕਾਲ!</strong> ਮੈਂ ਤੁਹਾਡਾ ਨੈਵੀਗੇਸ਼ਨ ਸਹਾਇਕ ਹਾਂ।<br><br>
+                     ਮੈਂ ਤੁਹਾਡੀ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ:<br>
+                     • 🧭 ਪੇਜ ਲੱਭਣ ਵਿੱਚ<br>
+                     • 📚 ਯੋਜਨਾਵਾਂ ਸਮਝਾਉਣ ਵਿੱਚ<br>
+                     • 🧮 ਕਮਾਈ ਦੀ ਗਿਣਤੀ ਵਿੱਚ<br>
+                     • 🌤️ ਮੌਸਮ ਦੀ ਜਾਣਕਾਰੀ<br><br>
+                     💡 <em>English, Hindi, ਜਾਂ Punjabi ਵਿੱਚ ਟਾਈਪ ਕਰੋ!</em>`
+            };
+            return msgs[currentLang];
+        }
+
+        function toggleChatbot() {
+            const win = document.getElementById('chatbotWindow');
+            const isOpen = win.classList.toggle('open');
+            if (isOpen && document.getElementById('chatbotMessages').children.length === 0) {
+                addMessage(getWelcomeMessage(), 'bot');
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // Auto-detect language from user's input
+            const detectedLang = detectLanguage(message);
+            const responseLang = detectedLang !== 'en' ? detectedLang : currentLang;
+
+            addMessage(message, 'user', null, detectedLang !== 'en' ? detectedLang : null);
+            input.value = '';
+
+            setTimeout(() => {
+                const response = getResponse(message, responseLang);
+                addMessage(response.reply, 'bot', response.action);
+            }, 400);
+        }
+
+        function addMessage(content, sender, action = null, detectedLang = null) {
+            const messagesDiv = document.getElementById('chatbotMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+
+            const avatar = sender === 'user' ? '👤' : '🤖';
+            let html = `<div class="message-avatar">${avatar}</div><div><div class="message-content">${content}`;
+
+            if (action) {
+                html += `<br><button class="action-btn" onclick="alert('Navigate to: ${action.path}')">${action.label} →</button>`;
+            }
+            html += `</div>`;
+
+            if (detectedLang && sender === 'user') {
+                const langNames = { hi: '🇮🇳 Hindi', pa: '🇮🇳 Punjabi', en: '🇬🇧 English' };
+                html += `<div class="detected-lang">Detected: ${langNames[detectedLang]}</div>`;
+            }
+
+            html += `</div>`;
+            messageDiv.innerHTML = html;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function getResponse(message, lang) {
+            const msg = message.toLowerCase();
+
+            // Check for calculations
+            if (KB.calculate.keywords.some(k => msg.includes(k))) {
+                const match = msg.match(/(\d+(?:\.\d+)?)\s*(acre|acres|एकड़|ਏਕੜ)/i);
+                const acres = match ? parseFloat(match[1]) : null;
+                const fn = KB.calculate[lang] || KB.calculate.en;
+                return { reply: fn(acres) };
+            }
+
+            // Check all other entries
+            for (const [key, entry] of Object.entries(KB)) {
+                if (key === 'default' || key === 'calculate') continue;
+                if (entry.keywords.some(k => msg.includes(k.toLowerCase()))) {
+                    const reply = entry[lang] || entry.en;
+                    return { reply, action: entry.action };
+                }
+            }
+
+            // Default
+            return { reply: KB.default[lang] || KB.default.en };
+        }
+    </script>
+</body>
+</html>
