@@ -11,7 +11,9 @@ export default function BuyerSearch() {
   const [loading, setLoading] = useState(true);
 
   // Filters
+  const [cropFilter, setCropFilter] = useState('All');
   const [maxDistance, setMaxDistance] = useState('80');
+  const [dbCrops, setDbCrops] = useState(['Paddy Straw', 'Basmati Straw', 'Mustard Husk', 'Wheat Straw']);
 
   // Connection Modal
   const [selectedBuyer, setSelectedBuyer] = useState(null);
