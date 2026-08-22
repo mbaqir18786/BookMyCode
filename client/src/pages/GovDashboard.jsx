@@ -52,9 +52,26 @@ export default function GovDashboard() {
 
   const currentCenter = districtCenters[district] || [30.901, 75.8573];
 
+  const [dbDistricts, setDbDistricts] = useState(['Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala', 'Sangrur', 'Bathinda', 'Ferozepur', 'Moga', 'Hoshiarpur', 'Faridkot']);
+
   useEffect(() => {
     fetchIncidents();
+    fetchOptions();
   }, [district]);
+
+  const fetchOptions = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/options`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.districts && data.districts.length > 0) {
+          setDbDistricts(data.districts);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch options in GovDashboard:', e);
+    }
+  };
 
   const fetchIncidents = async () => {
     try {
@@ -136,11 +153,9 @@ export default function GovDashboard() {
             onChange={(e) => setDistrict(e.target.value)}
             className="neo-input text-xs py-1.5 w-40 bg-white"
           >
-            <option value="Ludhiana">Ludhiana</option>
-            <option value="Sangrur">Sangrur</option>
-            <option value="Patiala">Patiala</option>
-            <option value="Bathinda">Bathinda</option>
-            <option value="Ferozepur">Ferozepur</option>
+            {dbDistricts.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
           </select>
         </div>
       </div>

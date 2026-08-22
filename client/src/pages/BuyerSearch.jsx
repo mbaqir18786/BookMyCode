@@ -23,8 +23,26 @@ export default function BuyerSearch() {
 
   useEffect(() => {
     fetchFarms();
+    fetchOptions();
+  }, []);
+
+  useEffect(() => {
     fetchBuyers();
-  }, [maxDistance]);
+  }, [cropFilter, maxDistance]);
+
+  const fetchOptions = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/options`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.crops && data.crops.length > 0) {
+          setDbCrops(data.crops);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch options in BuyerSearch:', e);
+    }
+  };
 
   const fetchFarms = async () => {
     try {
@@ -110,17 +128,33 @@ export default function BuyerSearch() {
       </div>
 
       {/* Filter Controls */}
-      <div className="neo-box p-4 bg-green-100 flex items-center gap-4 text-xs font-bold">
-        <span>Max Coverage Radius:</span>
-        <select
-          value={maxDistance}
-          onChange={(e) => setMaxDistance(e.target.value)}
-          className="neo-input text-xs py-1 w-48"
-        >
-          <option value="30">Within 30 km</option>
-          <option value="80">Within 80 km</option>
-          <option value="150">Within 150 km</option>
-        </select>
+      <div className="neo-box p-4 bg-green-100 flex flex-wrap items-center gap-4 text-xs font-bold">
+        <div className="flex items-center space-x-2">
+          <span>Crop / Residue Filter:</span>
+          <select
+            value={cropFilter}
+            onChange={(e) => setCropFilter(e.target.value)}
+            className="neo-input text-xs py-1 w-48"
+          >
+            <option value="All">All Residues</option>
+            {dbCrops.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <span>Max Coverage Radius:</span>
+          <select
+            value={maxDistance}
+            onChange={(e) => setMaxDistance(e.target.value)}
+            className="neo-input text-xs py-1 w-48"
+          >
+            <option value="30">Within 30 km</option>
+            <option value="80">Within 80 km</option>
+            <option value="150">Within 150 km</option>
+          </select>
+        </div>
       </div>
 
       {/* Buyer Cards */}

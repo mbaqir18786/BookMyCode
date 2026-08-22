@@ -88,9 +88,24 @@ export default function FarmForm() {
   ]);
 
   useEffect(() => {
-    if (isEdit) fetchFarm();
-    fetchCropOptions();
+    fetchCrops();
+    fetchOptions();
+    if (isEdit) fetchFarmDetail();
   }, [id]);
+
+  const fetchOptions = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/options`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.crops && data.crops.length > 0) {
+          setCropOptions(prev => Array.from(new Set([...prev, ...data.crops])));
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch options in FarmForm:', e);
+    }
+  };
 
   const fetchCropOptions = async () => {
     try {
