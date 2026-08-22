@@ -24,10 +24,44 @@ export default function MachinerySearch() {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const [dbMachineOptions, setDbMachineOptions] = useState([
+    { value: 'All', label: 'All Machines' },
+    { value: 'super_seeder', label: 'Super Seeder' },
+    { value: 'happy_seeder', label: 'Happy Seeder' },
+    { value: 'paddy_straw_chopper', label: 'Paddy Straw Chopper / Mulcher' },
+    { value: 'baler', label: 'Baler' },
+    { value: 'zero_till_drill', label: 'Zero Till Drill' },
+    { value: 'combine_harvester', label: 'Combine Harvester' }
+  ]);
+
   useEffect(() => {
     fetchFarms();
+    fetchOptions();
+  }, []);
+
+  useEffect(() => {
     fetchMachinery();
   }, [machineType, maxDistance]);
+
+  const fetchOptions = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/options`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.machine_types && data.machine_types.length > 0) {
+          const formatted = [
+            { value: 'All', label: 'All Machines' },
+            ...data.machine_types.map((m) => ({ value: m.value, label: m.label }))
+          ];
+          // Remove duplicates by value
+          const unique = formatted.filter((v, i, a) => a.findIndex(t => t.value.toLowerCase() === v.value.toLowerCase()) === i);
+          setDbMachineOptions(unique);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch options:', e);
+    }
+  };
 
   const fetchFarms = async () => {
     try {
@@ -119,11 +153,9 @@ export default function MachinerySearch() {
             onChange={(e) => setMachineType(e.target.value)}
             className="neo-input text-xs py-1"
           >
-            <option value="All">All Machines</option>
-            <option value="Super Seeder">Super Seeder</option>
-            <option value="Happy Seeder">Happy Seeder</option>
-            <option value="Paddy Straw Chopper / Mulcher">Mulcher / Chopper</option>
-            <option value="Baler">Baler</option>
+            {dbMachineOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
         </div>
 
