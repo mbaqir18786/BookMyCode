@@ -72,8 +72,8 @@ export default function Signup() {
         <label className="block space-y-1 text-sm font-black uppercase">
           <span>Portal role</span>
           <select className="neo-input" value={role} onChange={(event) => setRole(event.target.value)}>
-            <option value="farmer">Farmer</option>
-            <option value="seller">Seller</option>
+            <option value="farmer">🌾 Farmer (Register Plots, Rent Machinery, Sell Stubble)</option>
+            <option value="seller">🚜 Equipment Provider & Biomass Buyer (Equipment Rental / Paddy Straw Buyer)</option>
           </select>
         </label>
         {error && <ErrorMessage>{error}</ErrorMessage>}
