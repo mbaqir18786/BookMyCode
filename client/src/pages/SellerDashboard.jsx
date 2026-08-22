@@ -63,7 +63,15 @@ export default function SellerDashboard() {
           seller_type: data.seller_type || 'machinery_provider',
           phone: data.phone || '',
           address: data.address || '',
-          kyc_docs_url: data.kyc_docs_url || 'https://example.com/kyc-docs/verification.pdf'
+          aadhar_no: data.aadhar_no || '',
+          pan_no: data.pan_no || '',
+          gst_no: data.gst_no || '',
+          udyam_no: data.udyam_no || '',
+          aadhar_doc_url: data.aadhar_doc_url || '',
+          pan_doc_url: data.pan_doc_url || '',
+          gst_doc_url: data.gst_doc_url || '',
+          udyam_doc_url: data.udyam_doc_url || '',
+          kyc_docs_url: data.kyc_docs_url || ''
         });
       }
     } catch (e) {
@@ -97,6 +105,7 @@ export default function SellerDashboard() {
       if (res.ok) {
         setShowKycForm(false);
         fetchProfile();
+        alert('KYC verification request submitted with Aadhaar, PAN, GST, and Udyam details. It is now awaiting Super Admin verification.');
       }
     } catch (e) {
       console.error(e);
@@ -193,61 +202,182 @@ export default function SellerDashboard() {
 
       {/* KYC Form Drawer */}
       {showKycForm && (
-        <form onSubmit={handleKycSubmit} className="neo-box p-6 bg-white space-y-4 max-w-xl">
-          <h3 className="text-xl font-black uppercase border-b-2 border-black pb-2">Submit KYC Credentials</h3>
-          <div className="space-y-1">
-            <label className="text-xs font-bold uppercase">Business Name</label>
-            <input
-              type="text"
-              value={kycForm.business_name}
-              onChange={(e) => setKycForm({ ...kycForm, business_name: e.target.value })}
-              className="neo-input"
-              required
-            />
+        <form onSubmit={handleKycSubmit} className="neo-box p-6 bg-white space-y-6 max-w-2xl">
+          <div className="border-b-2 border-black pb-2">
+            <h3 className="text-xl font-black uppercase flex items-center gap-2">
+              <FileCheck className="w-6 h-6 text-green-700" />
+              <span>Seller/Buyer Business Verification (KYC / KYB)</span>
+            </h3>
+            <p className="text-xs text-gray-600 font-semibold mt-1">
+              Submit your official Aadhaar, PAN, GST, and Udyam credentials for Super Admin verification.
+            </p>
           </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold uppercase">Seller Sub-Type</label>
-            <select
-              value={kycForm.seller_type}
-              onChange={(e) => setKycForm({ ...kycForm, seller_type: e.target.value })}
-              className="neo-input"
-            >
-              <option value="machinery_provider">Machinery Provider (Rents Equipment)</option>
-              <option value="residue_buyer">Residue Buyer (Purchases Paddy Straw)</option>
-            </select>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase">Business / Trade Name</label>
+              <input
+                type="text"
+                value={kycForm.business_name}
+                onChange={(e) => setKycForm({ ...kycForm, business_name: e.target.value })}
+                className="neo-input"
+                placeholder="e.g., Punjab Agro Machinery Services"
+                required
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase">Seller Category</label>
+              <select
+                value={kycForm.seller_type}
+                onChange={(e) => setKycForm({ ...kycForm, seller_type: e.target.value })}
+                className="neo-input"
+              >
+                <option value="machinery_provider">Machinery Provider (Rents Equipment)</option>
+                <option value="residue_buyer">Residue Buyer (Purchases Paddy Straw)</option>
+              </select>
+            </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold uppercase">Phone Number</label>
-            <input
-              type="text"
-              value={kycForm.phone}
-              onChange={(e) => setKycForm({ ...kycForm, phone: e.target.value })}
-              className="neo-input"
-              required
-            />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase">Contact Phone Number</label>
+              <input
+                type="text"
+                value={kycForm.phone}
+                onChange={(e) => setKycForm({ ...kycForm, phone: e.target.value })}
+                className="neo-input"
+                placeholder="e.g., 9876543210"
+                required
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase">Registered Business Address</label>
+              <input
+                type="text"
+                value={kycForm.address}
+                onChange={(e) => setKycForm({ ...kycForm, address: e.target.value })}
+                className="neo-input"
+                placeholder="District, City, Punjab"
+                required
+              />
+            </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold uppercase">Address</label>
-            <input
-              type="text"
-              value={kycForm.address}
-              onChange={(e) => setKycForm({ ...kycForm, address: e.target.value })}
-              className="neo-input"
-              required
-            />
+
+          {/* 4 Required Documents: Aadhaar, PAN, GST, Udyam */}
+          <div className="border-2 border-black p-4 bg-yellow-50 space-y-4">
+            <h4 className="text-xs font-black uppercase tracking-wider text-black border-b-2 border-black pb-1">
+              Official Identification & Business Documents
+            </h4>
+
+            {/* 1. Aadhaar */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-3 border border-black">
+              <div>
+                <label className="text-xs font-bold uppercase text-gray-800">1. Aadhaar Card Number</label>
+                <input
+                  type="text"
+                  value={kycForm.aadhar_no}
+                  onChange={(e) => setKycForm({ ...kycForm, aadhar_no: e.target.value })}
+                  placeholder="12-digit Aadhaar Number"
+                  className="neo-input mt-1 text-xs font-mono"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold uppercase text-gray-800">Aadhaar Document URL / File</label>
+                <input
+                  type="url"
+                  value={kycForm.aadhar_doc_url}
+                  onChange={(e) => setKycForm({ ...kycForm, aadhar_doc_url: e.target.value })}
+                  placeholder="https://.../aadhar.pdf or image URL"
+                  className="neo-input mt-1 text-xs"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* 2. PAN */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-3 border border-black">
+              <div>
+                <label className="text-xs font-bold uppercase text-gray-800">2. Business / Personal PAN</label>
+                <input
+                  type="text"
+                  value={kycForm.pan_no}
+                  onChange={(e) => setKycForm({ ...kycForm, pan_no: e.target.value.toUpperCase() })}
+                  placeholder="e.g., ABCDE1234F"
+                  maxLength={10}
+                  className="neo-input mt-1 text-xs font-mono uppercase"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold uppercase text-gray-800">PAN Card Document URL / File</label>
+                <input
+                  type="url"
+                  value={kycForm.pan_doc_url}
+                  onChange={(e) => setKycForm({ ...kycForm, pan_doc_url: e.target.value })}
+                  placeholder="https://.../pan-card.pdf or image URL"
+                  className="neo-input mt-1 text-xs"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* 3. GST */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-3 border border-black">
+              <div>
+                <label className="text-xs font-bold uppercase text-gray-800">3. GSTIN Registration Number</label>
+                <input
+                  type="text"
+                  value={kycForm.gst_no}
+                  onChange={(e) => setKycForm({ ...kycForm, gst_no: e.target.value.toUpperCase() })}
+                  placeholder="e.g., 03AAAAA0000A1Z5"
+                  maxLength={15}
+                  className="neo-input mt-1 text-xs font-mono uppercase"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold uppercase text-gray-800">GST Certificate Document URL</label>
+                <input
+                  type="url"
+                  value={kycForm.gst_doc_url}
+                  onChange={(e) => setKycForm({ ...kycForm, gst_doc_url: e.target.value })}
+                  placeholder="https://.../gst-certificate.pdf"
+                  className="neo-input mt-1 text-xs"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* 4. Udyam */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-3 border border-black">
+              <div>
+                <label className="text-xs font-bold uppercase text-gray-800">4. Udyam Registration Number</label>
+                <input
+                  type="text"
+                  value={kycForm.udyam_no}
+                  onChange={(e) => setKycForm({ ...kycForm, udyam_no: e.target.value.toUpperCase() })}
+                  placeholder="e.g., UDYAM-PB-00-0000000"
+                  className="neo-input mt-1 text-xs font-mono uppercase"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold uppercase text-gray-800">Udyam Certificate Document URL</label>
+                <input
+                  type="url"
+                  value={kycForm.udyam_doc_url}
+                  onChange={(e) => setKycForm({ ...kycForm, udyam_doc_url: e.target.value })}
+                  placeholder="https://.../udyam-cert.pdf"
+                  className="neo-input mt-1 text-xs"
+                  required
+                />
+              </div>
+            </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold uppercase">KYC Verification Document URL</label>
-            <input
-              type="url"
-              value={kycForm.kyc_docs_url}
-              onChange={(e) => setKycForm({ ...kycForm, kyc_docs_url: e.target.value })}
-              className="neo-input"
-              required
-            />
-          </div>
-          <button type="submit" className="neo-btn neo-btn-primary text-xs w-full py-2.5">
-            SUBMIT KYC TO SUPER ADMIN QUEUE
+
+          <button type="submit" className="neo-btn neo-btn-primary text-sm w-full py-3">
+            SUBMIT 4-DOCUMENT KYC TO SUPER ADMIN QUEUE
           </button>
         </form>
       )}

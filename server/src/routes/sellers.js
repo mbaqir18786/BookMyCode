@@ -25,22 +25,89 @@ router.get('/profile', async (req, res) => {
   }
 });
 
-// POST /api/sellers/kyc - Submit KYC documentation
+// POST /api/sellers/kyc - Submit KYC documentation (Aadhaar, PAN, GST, Udyam)
 router.post('/kyc', async (req, res) => {
   try {
-    const { user_id, seller_type, business_name, phone, address, kyc_docs_url } = req.body;
+    const {
+      user_id,
+      seller_type,
+      business_name,
+      phone,
+      address,
+      aadhar_no,
+      pan_no,
+      gst_no,
+      udyam_no,
+      aadhar_doc_url,
+      pan_doc_url,
+      gst_doc_url,
+      udyam_doc_url,
+      kyc_docs_url
+    } = req.body;
+
     let seller = await get('SELECT * FROM sellers WHERE user_id = $1', [user_id]);
 
     if (seller) {
       await run(
-        `UPDATE sellers SET seller_type = $1, business_name = $2, phone = $3, address = $4, kyc_docs_url = $5, kyc_status = 'pending' WHERE id = $6`,
-        [seller_type, business_name, phone, address, kyc_docs_url, seller.id]
+        `UPDATE sellers 
+         SET seller_type = $1, 
+             business_name = $2, 
+             phone = $3, 
+             address = $4, 
+             aadhar_no = $5, 
+             pan_no = $6, 
+             gst_no = $7, 
+             udyam_no = $8, 
+             aadhar_doc_url = $9, 
+             pan_doc_url = $10, 
+             gst_doc_url = $11, 
+             udyam_doc_url = $12, 
+             kyc_docs_url = $13, 
+             kyc_status = 'pending' 
+         WHERE id = $14`,
+        [
+          seller_type || 'machinery_provider',
+          business_name,
+          phone,
+          address,
+          aadhar_no || null,
+          pan_no ? pan_no.toUpperCase() : null,
+          gst_no ? gst_no.toUpperCase() : null,
+          udyam_no ? udyam_no.toUpperCase() : null,
+          aadhar_doc_url || null,
+          pan_doc_url || null,
+          gst_doc_url || null,
+          udyam_doc_url || null,
+          kyc_docs_url || aadhar_doc_url || pan_doc_url || gst_doc_url || udyam_doc_url,
+          seller.id
+        ]
       );
     } else {
       const sellerId = 'seller_' + Date.now();
       await run(
-        `INSERT INTO sellers (id, user_id, seller_type, business_name, phone, address, kyc_status, kyc_docs_url) VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7)`,
-        [sellerId, user_id, seller_type, business_name, phone, address, kyc_docs_url]
+        `INSERT INTO sellers (
+          id, user_id, seller_type, business_name, phone, address, 
+          aadhar_no, pan_no, gst_no, udyam_no, 
+          aadhar_doc_url, pan_doc_url, gst_doc_url, udyam_doc_url, 
+          kyc_status, kyc_docs_url
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'pending', $15)`,
+        [
+          sellerId,
+          user_id,
+          seller_type || 'machinery_provider',
+          business_name,
+          phone,
+          address,
+          aadhar_no || null,
+          pan_no ? pan_no.toUpperCase() : null,
+          gst_no ? gst_no.toUpperCase() : null,
+          udyam_no ? udyam_no.toUpperCase() : null,
+          aadhar_doc_url || null,
+          pan_doc_url || null,
+          gst_doc_url || null,
+          udyam_doc_url || null,
+          kyc_docs_url || aadhar_doc_url || pan_doc_url || gst_doc_url || udyam_doc_url
+        ]
       );
     }
 
@@ -48,7 +115,7 @@ router.post('/kyc', async (req, res) => {
     await run("UPDATE users SET kyc_status = 'pending' WHERE id = $1", [user_id]);
 
     const updatedSeller = await get('SELECT * FROM sellers WHERE user_id = $1', [user_id]);
-    res.json({ message: 'KYC submitted successfully and pending approval', seller: updatedSeller });
+    res.json({ message: 'KYC documents submitted successfully and awaiting Super Admin verification.', seller: updatedSeller });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

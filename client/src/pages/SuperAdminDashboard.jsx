@@ -130,12 +130,39 @@ export default function SuperAdminDashboard() {
                     <p className="text-xs font-semibold text-gray-600">Owner: {s.owner_name} ({s.phone})</p>
                   </div>
 
-                  <div className="text-xs font-semibold text-gray-700 bg-gray-50 p-3 border-2 border-black space-y-1">
+                  <div className="text-xs font-semibold text-gray-700 bg-gray-50 p-3 border-2 border-black space-y-2">
                     <p>Address: <strong>{s.address}</strong></p>
                     <p>Submitted: <strong>{new Date(s.created_at).toLocaleDateString()}</strong></p>
-                    <p className="pt-1">
-                      Docs: <a href={s.kyc_docs_url || '#'} target="_blank" rel="noreferrer" className="text-blue-700 underline font-bold">View KYC Documents PDF</a>
-                    </p>
+
+                    <div className="border-t border-gray-300 pt-2 space-y-1.5 font-mono text-[11px]">
+                      <div className="flex items-center justify-between bg-white p-1.5 border border-gray-300">
+                        <span>🪪 Aadhaar: <strong>{s.aadhar_no || 'Not Provided'}</strong></span>
+                        {s.aadhar_doc_url ? (
+                          <a href={s.aadhar_doc_url} target="_blank" rel="noreferrer" className="text-blue-700 underline font-bold">View Doc</a>
+                        ) : <span className="text-gray-400">No file</span>}
+                      </div>
+
+                      <div className="flex items-center justify-between bg-white p-1.5 border border-gray-300">
+                        <span>📄 PAN: <strong>{s.pan_no || 'Not Provided'}</strong></span>
+                        {s.pan_doc_url ? (
+                          <a href={s.pan_doc_url} target="_blank" rel="noreferrer" className="text-blue-700 underline font-bold">View Doc</a>
+                        ) : <span className="text-gray-400">No file</span>}
+                      </div>
+
+                      <div className="flex items-center justify-between bg-white p-1.5 border border-gray-300">
+                        <span>🏢 GSTIN: <strong>{s.gst_no || 'Not Provided'}</strong></span>
+                        {s.gst_doc_url ? (
+                          <a href={s.gst_doc_url} target="_blank" rel="noreferrer" className="text-blue-700 underline font-bold">View Doc</a>
+                        ) : <span className="text-gray-400">No file</span>}
+                      </div>
+
+                      <div className="flex items-center justify-between bg-white p-1.5 border border-gray-300">
+                        <span>📜 Udyam: <strong>{s.udyam_no || 'Not Provided'}</strong></span>
+                        {s.udyam_doc_url ? (
+                          <a href={s.udyam_doc_url} target="_blank" rel="noreferrer" className="text-blue-700 underline font-bold">View Doc</a>
+                        ) : <span className="text-gray-400">No file</span>}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
